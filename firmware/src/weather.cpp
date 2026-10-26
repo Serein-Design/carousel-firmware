@@ -48,12 +48,13 @@ struct Wait {
   uint32_t from = 0, ms = 0;
   void start(uint32_t wait) { from = millis(); ms = wait; }
   bool over() const { return millis() - from >= ms; }
+  uint32_t left() const { return over() ? 0 : ms - (millis() - from); }
 };
 
-// The table's own pacing, apart from MET's: its backoff and failures in a
-// row (an unreachable or refused table; a city not found is not one)
+// The table's own pacing, apart from MET's (locateNext): its backoff after
+// an unreachable or refused table, its short waits while it had no memory
 static Wait locateWait;
-static uint8_t locateFailures = 0;
+static LocatePace locatePace;
 
 // The city typed or chosen -> place, coordinates and zone, from the city
 // table (places.cpp). A place an earlier firmware found takes the zone.
@@ -62,14 +63,13 @@ static void locate() {
   PlaceHit hit;
   char zone[sizeof(settings.zone)];
   const LocateResult r = placesLocate(settings.city, cid, hit, zone, sizeof(zone));
-  if (r == LOCATE_UNREACHABLE) {
-    if (locateFailures < 255) locateFailures++;
-    const uint32_t s = locateRetryDelay(locateFailures, slot);
+  const uint32_t s = locateNext(locatePace, r, slot);
+  if (r == LOCATE_UNREACHABLE || r == LOCATE_BUSY) {
     locateWait.start(s * 1000UL);
-    Serial.printf("[PLACE] city table again in %lu min\n", (unsigned long)(s / 60));
+    if (s < 60) Serial.printf("[PLACE] city table again in %lu s\n", (unsigned long)s);
+    else Serial.printf("[PLACE] city table again in %lu min\n", (unsigned long)(s / 60));
     return;
   }
-  locateFailures = 0;
   if (placesChosen == cid) placesChosen = -1;  // unless the form chose another meanwhile
   const Location loc = {settings.place, sizeof(settings.place), &settings.lat, &settings.lon,
                         settings.zone, sizeof(settings.zone)};
@@ -227,10 +227,10 @@ uint32_t weatherStep(bool asked) {
     // The owner changed the city: one try now, whatever the backoff
     if (asked) locateWait.start(0);
     // The city is looked up when it changed, or along with a forecast
-    // request until found: never on a timer, and not again once the
-    // table said it has none. Also a place an earlier firmware found,
-    // which kept no zone.
-    if (ask && locateWait.over() &&
+    // request until found: on a timer only for the short waits of a
+    // table without memory, and not again once the table said it has
+    // none. Also a place an earlier firmware found, which kept no zone.
+    if ((ask || locatePace.busy) && locateWait.over() &&
         locateWanted(settings.city, settings.place, settings.zone, locateFailed,
                      placesChosen >= 0))
       locate();
@@ -243,9 +243,11 @@ uint32_t weatherStep(bool asked) {
       dueAt = millis() + fetchWeather() * 1000UL;
     }
   }
-  // Until the next request; a look every minute when the Wi-Fi or an
-  // update held the last one back
-  return constrain((int32_t)(dueAt - millis()), 1000, (int32_t)HTTPS_LOOK_MS);
+  // Until the next request, or the lookup's short wait; a look every
+  // minute when the Wi-Fi or an update held the last one back
+  int32_t next = (int32_t)(dueAt - millis());
+  if (locatePace.busy && !locateWait.over()) next = std::min(next, (int32_t)locateWait.left());
+  return constrain(next, 1000, (int32_t)HTTPS_LOOK_MS);
 }
 
 void weatherRefresh() { httpsAsk(HTTPS_WEATHER); }

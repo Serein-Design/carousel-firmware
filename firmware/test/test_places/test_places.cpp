@@ -17,7 +17,34 @@
 #include <vector>
 
 #include "../../src/places_index.cpp"
+
+// The table's allocations, which a test refuses: the failAt-th from now
+// (0 none), or the next failTimes of failSize bytes. Only places_logic's
+// malloc goes through here: its headers come first, untouched.
+#include <ctype.h>
+#include <math.h>
+#include <string.h>
+#include <algorithm>
+#include <new>
+#include <mbedtls/md.h>
+#include <rom/miniz.h>
+#include "../../src/places_logic.h"
+#include "../../src/tz_names.h"
+#include "../../src/update_logic.h"
+static int allocs = 0, failAt = 0, failTimes = 0;
+static size_t failSize = 0;
+static void *tableMalloc(size_t n) {
+  allocs++;
+  if (failAt && allocs == failAt) return nullptr;
+  if (failTimes && n == failSize) {
+    failTimes--;
+    return nullptr;
+  }
+  return malloc(n);
+}
+#define malloc(n) tableMalloc(n)
 #include "../../src/places_logic.cpp"
+#undef malloc
 #include "../../src/tz_names.cpp"
 #include "../../src/update_logic.cpp"
 
@@ -28,6 +55,7 @@ struct FileSource : PlacesSource {
   long corrupt = -1;
   bool fail = false;
   int reads = 0;
+  int releases = 0;      // connections closed for the inflate
   FileSource() {
     FILE *f = fopen("../data/places.bin", "rb");   // pio test -d firmware runs in firmware/
     TEST_ASSERT_NOT_NULL_MESSAGE(f, "data/places.bin");
@@ -43,6 +71,7 @@ struct FileSource : PlacesSource {
     if (corrupt >= (long)offset && corrupt < (long)(offset + len)) out[corrupt - offset] ^= 0x01;
     return true;
   }
+  void release() override { releases++; }
 };
 
 static int FRANCE, SPAIN, UK, USA;   // country table numbers, read in setUp
@@ -564,6 +593,105 @@ static void test_retry_delay() {
   TEST_ASSERT_EQUAL_UINT32(3600 + 1, locateRetryDelay(1, 3601));
 }
 
+// No memory is not an unreachable table: a short wait, not the long backoff
+static void test_no_memory_is_busy() {
+  TEST_ASSERT_EQUAL(LOCATE_BUSY, locateFailure(PLACES_NO_MEMORY));
+  TEST_ASSERT_EQUAL(LOCATE_UNREACHABLE, locateFailure(PLACES_UNREACHABLE));
+  TEST_ASSERT_EQUAL(LOCATE_UNREACHABLE, locateFailure(PLACES_REFUSED));
+}
+
+static void test_busy_retries_soon_then_backs_off() {
+  LocatePace p;
+  // Busy: LOCATE_BUSY_TRIES short waits, none counted as a failure
+  for (int i = 0; i < 8; i++) {
+    TEST_ASSERT_EQUAL_UINT32(15, locateNext(p, LOCATE_BUSY, 1234));
+    TEST_ASSERT_EQUAL_UINT8(0, p.failures);
+  }
+  // Never the memory: the normal backoff, as an unreachable table
+  TEST_ASSERT_EQUAL_UINT32(locateRetryDelay(1, 1234), locateNext(p, LOCATE_BUSY, 1234));
+  TEST_ASSERT_EQUAL_UINT8(1, p.failures);
+  // After the long wait, short tries again; the backoff goes on doubling
+  for (int i = 0; i < 8; i++) TEST_ASSERT_EQUAL_UINT32(15, locateNext(p, LOCATE_BUSY, 1234));
+  TEST_ASSERT_EQUAL_UINT32(locateRetryDelay(2, 1234), locateNext(p, LOCATE_BUSY, 1234));
+  TEST_ASSERT_EQUAL_UINT32(locateRetryDelay(3, 1234), locateNext(p, LOCATE_UNREACHABLE, 1234));
+  // An answer, found or not, starts over
+  TEST_ASSERT_EQUAL_UINT32(0, locateNext(p, LOCATE_FOUND, 1234));
+  TEST_ASSERT_EQUAL_UINT8(0, p.failures);
+  TEST_ASSERT_EQUAL_UINT8(0, p.busy);
+  TEST_ASSERT_EQUAL_UINT32(15, locateNext(p, LOCATE_BUSY, 0));
+  TEST_ASSERT_EQUAL_UINT32(0, locateNext(p, LOCATE_NOT_FOUND, 0));
+  TEST_ASSERT_EQUAL_UINT32(3600, locateNext(p, LOCATE_UNREACHABLE, 0));
+  // An unreachable table ends the short tries: the next busy has 8 again
+  for (int i = 0; i < 8; i++) TEST_ASSERT_EQUAL_UINT32(15, locateNext(p, LOCATE_BUSY, 0));
+}
+
+// Whichever allocation fails, a search says "no memory" (the page shows
+// busy and asks again), never a short or empty answer
+static void test_search_without_memory_is_never_an_answer() {
+  PlaceHit want[PLACES_RESULTS];
+  int all;
+  {
+    FileSource src;
+    PlacesTable t;
+    allocs = 0;
+    TEST_ASSERT_EQUAL(2, t.search(src, "paris", -1, "en", want, PLACES_RESULTS));
+    all = allocs;
+  }
+  TEST_ASSERT_TRUE(all >= 4);   // head, name block, its input, a decompressor
+  for (int k = 1; k <= all; k++) {
+    FileSource src;
+    PlacesTable t;
+    PlaceHit h[PLACES_RESULTS];
+    allocs = 0;
+    failAt = k;
+    const int n = t.search(src, "paris", -1, "en", h, PLACES_RESULTS);
+    failAt = 0;
+    if (n < 0) {
+      TEST_ASSERT_EQUAL(PLACES_NO_MEMORY, t.error());
+      // Asked again with the memory back: the whole answer
+      TEST_ASSERT_EQUAL(2, t.search(src, "paris", -1, "en", h, PLACES_RESULTS));
+    } else {
+      TEST_ASSERT_EQUAL(2, n);   // the decompressor's, retried with the connection closed
+    }
+    TEST_ASSERT_EQUAL(want[0].id, h[0].id);
+    TEST_ASSERT_EQUAL_STRING(want[1].region, h[1].region);
+  }
+}
+
+// The inflate's decompressor never shares the heap with a connection it
+// starves: refused beside it, the connection is closed and the inflate
+// goes on; one handshake more, only then
+static void test_inflate_closes_the_connection_when_short() {
+  PlaceHit h[PLACES_RESULTS];
+  {
+    FileSource src;
+    PlacesTable t;
+    TEST_ASSERT_EQUAL(2, t.search(src, "paris", -1, "en", h, PLACES_RESULTS));
+    TEST_ASSERT_EQUAL(0, src.releases);   // memory enough: the connection kept
+  }
+  {
+    FileSource src;
+    PlacesTable t;
+    failSize = sizeof(tinfl_decompressor);
+    failTimes = 1;
+    TEST_ASSERT_EQUAL(2, t.search(src, "paris", -1, "en", h, PLACES_RESULTS));
+    TEST_ASSERT_EQUAL(1, src.releases);
+    TEST_ASSERT_EQUAL(0, failTimes);
+  }
+  {
+    // Refused even then: no memory, and nothing kept half inflated
+    FileSource src;
+    PlacesTable t;
+    failSize = sizeof(tinfl_decompressor);
+    failTimes = 2;
+    TEST_ASSERT_EQUAL(-1, t.search(src, "paris", -1, "en", h, PLACES_RESULTS));
+    TEST_ASSERT_EQUAL(PLACES_NO_MEMORY, t.error());
+    TEST_ASSERT_EQUAL(1, src.releases);
+    TEST_ASSERT_EQUAL(2, t.search(src, "paris", -1, "en", h, PLACES_RESULTS));
+  }
+  failTimes = 0;
+}
+
 // The local hour and minute at t in the zone tz, as "HH:MM"
 static std::string localAt(const char *tz, time_t t) {
   setenv("TZ", tz, 1);
@@ -618,6 +746,10 @@ int main() {
   RUN_TEST(test_table_kept_while_typing_never_into_a_forecast);
   RUN_TEST(test_phone_zone_at_setup);
   RUN_TEST(test_retry_delay);
+  RUN_TEST(test_no_memory_is_busy);
+  RUN_TEST(test_busy_retries_soon_then_backs_off);
+  RUN_TEST(test_search_without_memory_is_never_an_answer);
+  RUN_TEST(test_inflate_closes_the_connection_when_short);
   RUN_TEST(test_posix_zone);
   return UNITY_END();
 }

@@ -4,6 +4,7 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <esp_heap_caps.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
@@ -32,7 +33,9 @@ class HttpSource : public PlacesSource {
     https_ = strncmp(url_, "https://", 8) == 0;
     if (https_) trustRootCertificates(tls_);
   }
-  ~HttpSource() {
+  ~HttpSource() { release(); }
+  // The TLS session's buffers freed; the next read connects again
+  void release() override {
     http_.end();
     tls_.stop();
     plain_.stop();
@@ -108,16 +111,30 @@ static int homeCountry(PlacesSource &src, PlacesTable &t) {
   return home;
 }
 
+// The byte-addressable heap now, in one line: what the hardware check
+// reads to size the table's needs against (its largest piece is the
+// decompressor's 10 992 bytes)
+static void logHeap(const char *what) {
+  Serial.printf("[PLACES] %s: heap %u free, largest block %u\n", what,
+                (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT),
+                (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+}
+
 static void logError(const PlacesTable &t) {
   static const char *const WHY[] = {"ok", "unreachable", "refused (hash or layout)", "no memory"};
-  Serial.printf("[PLACES] table %s\n", WHY[t.error()]);
+  if (t.error() == PLACES_NO_MEMORY) logHeap("table no memory");
+  else Serial.printf("[PLACES] table %s\n", WHY[t.error()]);
 }
 
 LocateResult placesLocate(const char *city, int32_t cid, PlaceHit &hit, char *zone,
                           size_t zoneSize) {
+  logHeap("city lookup");
   HttpSource src;
   PlacesTable *t = useTable();
-  if (!t) return LOCATE_UNREACHABLE;
+  if (!t) {
+    logHeap("table no memory");
+    return LOCATE_BUSY;
+  }
   // The suggestion chosen; a number the table does not have, the name typed
   if (cid >= 0 && cid <= 0xFFFF && t->city(src, (uint16_t)cid, tr().code, hit, zone, zoneSize))
     return LOCATE_FOUND;
@@ -127,7 +144,7 @@ LocateResult placesLocate(const char *city, int32_t cid, PlaceHit &hit, char *zo
     if (n == 1 && t->zoneName(src, hit.zone, zone, zoneSize)) return LOCATE_FOUND;
   }
   logError(*t);
-  return LOCATE_UNREACHABLE;
+  return locateFailure(t->error());
 }
 
 // --- The settings page's search, handed from the web task -------------------
@@ -215,10 +232,14 @@ void placesServe() {
     PlaceHit *hits = new (std::nothrow) PlaceHit[PLACES_RESULTS];
     {
       HttpSource src;
+      // No memory, like every failure, answers no hits (jobCount -1): the
+      // route says busy and the page asks again, never "no such city"
       PlacesTable *t = hits ? useTable() : nullptr;
       if (t) {
         n = t->search(src, q, homeCountry(src, *t), tr().code, hits, PLACES_RESULTS);
         if (n < 0) logError(*t);
+      } else {
+        logHeap("table no memory");
       }
     }
     JobLock l;
