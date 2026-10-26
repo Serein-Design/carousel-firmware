@@ -1,0 +1,837 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #FBFBFA; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body><title>HUB75 → ESP32 Wiring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root {
+  --ground:     #F4F6F8;
+  --surface:    #FFFFFF;
+  --surface-2:  #E9EDF2;
+  --ink:        #14181D;
+  --ink-soft:   #5B6675;
+  --ink-faint:  #8A94A3;
+  --rule:       #D6DBE2;
+  --rule-soft:  #E4E8ED;
+  --accent:     #A2622A;
+  --accent-bg:  #F3E7DA;
+  --sig-r:      #C43A38;
+  --sig-g:      #1F8A4C;
+  --sig-b:      #2A62C6;
+  --danger:     #B5352F;
+  --danger-bg:  #F8E4E2;
+
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body:    "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --f-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:     #14171C;
+    --surface:    #1B1F26;
+    --surface-2:  #242A33;
+    --ink:        #E8EBEF;
+    --ink-soft:   #98A3B2;
+    --ink-faint:  #6B7684;
+    --rule:       #313842;
+    --rule-soft:  #262C35;
+    --accent:     #D9945A;
+    --accent-bg:  #35261A;
+    --sig-r:      #EF6E6C;
+    --sig-g:      #4FC17E;
+    --sig-b:      #6E9BEE;
+    --danger:     #EF6E6C;
+    --danger-bg:  #35201F;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:     #14171C;
+  --surface:    #1B1F26;
+  --surface-2:  #242A33;
+  --ink:        #E8EBEF;
+  --ink-soft:   #98A3B2;
+  --ink-faint:  #6B7684;
+  --rule:       #313842;
+  --rule-soft:  #262C35;
+  --accent:     #D9945A;
+  --accent-bg:  #35261A;
+  --sig-r:      #EF6E6C;
+  --sig-g:      #4FC17E;
+  --sig-b:      #6E9BEE;
+  --danger:     #EF6E6C;
+  --danger-bg:  #35201F;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 56px 28px 96px;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead { display: flex; flex-direction: column; gap: 14px; }
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(30px, 5.5vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.standfirst {
+  font-size: 16px;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0;
+}
+
+.specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 28px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.specs b { color: var(--ink); font-weight: 600; }
+
+/* ---------- sections ---------- */
+
+section {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+}
+
+h2 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+
+h3 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 15px;
+  margin: 28px 0 6px;
+}
+
+.lede {
+  color: var(--ink-soft);
+  max-width: 64ch;
+  margin: 0 0 26px;
+}
+
+p { max-width: 64ch; }
+
+/* ---------- figures ---------- */
+
+figure {
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.figframe {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 20px 12px;
+  overflow-x: auto;
+}
+
+figure svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+  font-family: var(--f-mono);
+}
+
+figcaption {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 12px;
+  max-width: 64ch;
+}
+figcaption b { color: var(--ink); font-weight: 600; }
+
+/* ---------- table ---------- */
+
+.tablewrap { overflow-x: auto; margin-top: 4px; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 520px;
+  font-variant-numeric: tabular-nums;
+}
+
+thead th {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: left;
+  padding: 0 12px 8px;
+  border-bottom: 1px solid var(--rule);
+}
+thead th:first-child { padding-left: 0; }
+
+tbody td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--rule-soft);
+  font-size: 14px;
+}
+tbody td:first-child { padding-left: 0; }
+
+tbody tr:hover { background: var(--surface); }
+
+.pinno  { font-family: var(--f-mono); color: var(--ink-faint); width: 48px; }
+.sig    { font-family: var(--f-mono); font-weight: 600; width: 84px; }
+.gpio   { font-family: var(--f-mono); font-weight: 600; width: 96px; }
+.note   { color: var(--ink-soft); font-size: 13px; }
+
+.r  { color: var(--sig-r); }
+.g  { color: var(--sig-g); }
+.b  { color: var(--sig-b); }
+.gnd{ color: var(--ink-faint); }
+
+tr.gndrow td.sig, tr.gndrow td.gpio { color: var(--ink-faint); font-weight: 400; }
+
+/* ---------- callout ---------- */
+
+.callout {
+  background: var(--danger-bg);
+  border-left: 3px solid var(--danger);
+  padding: 18px 22px;
+  margin: 28px 0 0;
+  border-radius: 0 3px 3px 0;
+}
+.callout h3 {
+  margin: 0 0 6px;
+  color: var(--danger);
+  font-size: 14px;
+  font-family: var(--f-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.callout p { margin: 0; font-size: 14px; }
+.callout p + p { margin-top: 8px; }
+
+/* ---------- checklist ---------- */
+
+.checks {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  display: grid;
+  gap: 1px;
+  background: var(--rule-soft);
+  border-top: 1px solid var(--rule-soft);
+  border-bottom: 1px solid var(--rule-soft);
+}
+.checks li {
+  background: var(--ground);
+  padding: 12px 0 12px 34px;
+  position: relative;
+  font-size: 14px;
+  max-width: none;
+}
+.checks li::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+}
+.checks b { font-weight: 600; }
+
+/* ---------- symptom list ---------- */
+
+.symptoms { display: grid; gap: 0; margin-top: 16px; }
+.symptom {
+  display: grid;
+  grid-template-columns: minmax(150px, 230px) 1fr;
+  gap: 4px 28px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  align-items: start;
+}
+.symptom:first-child { border-top: 1px solid var(--rule); }
+.symptom dt {
+  font-weight: 600;
+  font-size: 14px;
+}
+.symptom dd {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+.symptom dd code, p code, li code, figcaption code {
+  font-family: var(--f-mono);
+  font-size: 0.88em;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 2px;
+  color: var(--ink);
+}
+
+@media (max-width: 560px) {
+  .wrap { padding: 36px 18px 72px; }
+  .symptom { grid-template-columns: 1fr; gap: 4px; }
+}
+
+footer {
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Workshop sheet</div>
+    <h1>HUB75 → ESP32 Wiring</h1>
+    <p class="standfirst">Connecting a P3 64×32 LED panel to an ESP32 DevKit board for a breadboard test setup.</p>
+    <div class="specs">
+      <span><b>Panel</b> P3 64×32 · 1/16 scan</span>
+      <span><b>Connector</b> IDC 2×8 · 16 pins</span>
+      <span><b>Signals</b> 13 + ground</span>
+    </div>
+  </header>
+
+  <!-- ================= 1. Which connector ================= -->
+  <section>
+    <h2>1 · Find the right connector</h2>
+    <p class="lede">A HUB75 panel has two identical 2×8 connectors: an input and an output. Data passes through the panel from one to the other. Plugging into the output gives a black screen — without damaging anything.</p>
+
+    <figure>
+      <div class="figframe">
+        <svg viewBox="0 0 660 260" role="img" aria-label="Rear view of an LED panel: data enters through the input connector, passes through the panel and leaves through the output connector used for chaining.">
+          <!-- PCB -->
+          <rect x="18" y="18" width="624" height="224" rx="4" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1"/>
+
+          <!-- power lugs -->
+          <rect x="280" y="30" width="100" height="26" rx="2" fill="var(--surface)" stroke="var(--rule)"/>
+          <rect x="290" y="37" width="12" height="12" rx="1" fill="var(--sig-r)"/>
+          <rect x="312" y="37" width="12" height="12" rx="1" fill="var(--ink-faint)"/>
+          <text x="345" y="47" font-size="11" fill="var(--ink-soft)">V+ / GND</text>
+          <text x="330" y="74" font-size="10" fill="var(--ink-faint)" text-anchor="middle">power terminals</text>
+
+          <!-- IN header -->
+          <rect x="62" y="104" width="86" height="96" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <g fill="var(--ink-faint)">
+            <circle cx="86" cy="122" r="3.5"/><circle cx="124" cy="122" r="3.5"/>
+            <circle cx="86" cy="142" r="3.5"/><circle cx="124" cy="142" r="3.5"/>
+            <circle cx="86" cy="162" r="3.5"/><circle cx="124" cy="162" r="3.5"/>
+            <circle cx="86" cy="182" r="3.5"/><circle cx="124" cy="182" r="3.5"/>
+          </g>
+          <text x="105" y="224" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="middle">INPUT</text>
+          <text x="105" y="94" font-size="10" fill="var(--ink-faint)" text-anchor="middle">to the ESP32</text>
+
+          <!-- OUT header -->
+          <rect x="512" y="104" width="86" height="96" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <g fill="var(--ink-faint)">
+            <circle cx="536" cy="122" r="3.5"/><circle cx="574" cy="122" r="3.5"/>
+            <circle cx="536" cy="142" r="3.5"/><circle cx="574" cy="142" r="3.5"/>
+            <circle cx="536" cy="162" r="3.5"/><circle cx="574" cy="162" r="3.5"/>
+            <circle cx="536" cy="182" r="3.5"/><circle cx="574" cy="182" r="3.5"/>
+          </g>
+          <text x="555" y="224" font-size="12" font-weight="600" fill="var(--ink-faint)" text-anchor="middle">OUTPUT</text>
+          <text x="555" y="94" font-size="10" fill="var(--ink-faint)" text-anchor="middle">next panel</text>
+
+          <!-- flow arrow -->
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+          <line x1="160" y1="152" x2="500" y2="152" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="330" y="144" font-size="11" fill="var(--accent)" text-anchor="middle">data direction</text>
+        </svg>
+      </div>
+      <figcaption>Rear view of the panel. <b>Which side the input is on varies between models</b> — identify it from the silkscreen: an <code>IN</code>/<code>J1</code> marking, or printed arrows pointing towards the output. If in doubt, try one connector, then the other.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 2. Pinout ================= -->
+  <section>
+    <h2>2 · Connector pinout</h2>
+    <p class="lede">Standard IDC numbering: pins 1 and 2 sit side by side, then 3 and 4 below them, and so on. Pin 1 is marked on the board by a square pad, a triangle or a silkscreened “1”.</p>
+
+    <figure>
+      <div class="figframe">
+        <svg viewBox="0 0 560 450" role="img" aria-label="Pinout of the 2x8 HUB75 connector showing, for each pin, the signal and the corresponding ESP32 GPIO.">
+          <!-- notch callout -->
+          <text x="280" y="34" font-size="10" fill="var(--ink-faint)" text-anchor="middle">key notch</text>
+          <line x1="280" y1="40" x2="280" y2="58" stroke="var(--ink-faint)" stroke-width="1"/>
+
+          <!-- shroud -->
+          <rect x="200" y="68" width="160" height="336" rx="6" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
+          <rect x="263" y="59" width="34" height="18" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+
+          <!-- row 1 : pins 1 / 2 -->
+          <rect x="221" y="91" width="22" height="22" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="232" y="106" font-size="10" fill="var(--accent)" text-anchor="middle" font-weight="600">1</text>
+          <text x="186" y="107" font-size="13" font-weight="600" fill="var(--sig-r)" text-anchor="end">R1</text>
+          <text x="134" y="107" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO25</text>
+          <circle cx="328" cy="102" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="106" font-size="10" fill="var(--ink-faint)" text-anchor="middle">2</text>
+          <text x="374" y="107" font-size="13" font-weight="600" fill="var(--sig-g)">G1</text>
+          <text x="424" y="107" font-size="12" fill="var(--ink-soft)">GPIO26</text>
+
+          <!-- row 2 : pins 3 / 4 -->
+          <circle cx="232" cy="140" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="144" font-size="10" fill="var(--ink-faint)" text-anchor="middle">3</text>
+          <text x="186" y="145" font-size="13" font-weight="600" fill="var(--sig-b)" text-anchor="end">B1</text>
+          <text x="134" y="145" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO27</text>
+          <circle cx="328" cy="140" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="144" font-size="10" fill="var(--ink-faint)" text-anchor="middle">4</text>
+          <text x="374" y="145" font-size="13" font-weight="600" fill="var(--ink-faint)">GND</text>
+          <text x="424" y="145" font-size="12" fill="var(--ink-faint)">ground</text>
+
+          <!-- row 3 : pins 5 / 6 -->
+          <circle cx="232" cy="178" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="182" font-size="10" fill="var(--ink-faint)" text-anchor="middle">5</text>
+          <text x="186" y="183" font-size="13" font-weight="600" fill="var(--sig-r)" text-anchor="end">R2</text>
+          <text x="134" y="183" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO21</text>
+          <circle cx="328" cy="178" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="182" font-size="10" fill="var(--ink-faint)" text-anchor="middle">6</text>
+          <text x="374" y="183" font-size="13" font-weight="600" fill="var(--sig-g)">G2</text>
+          <text x="424" y="183" font-size="12" fill="var(--ink-soft)">GPIO22</text>
+
+          <!-- row 4 : pins 7 / 8 -->
+          <circle cx="232" cy="216" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="220" font-size="10" fill="var(--ink-faint)" text-anchor="middle">7</text>
+          <text x="186" y="221" font-size="13" font-weight="600" fill="var(--sig-b)" text-anchor="end">B2</text>
+          <text x="134" y="221" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO23</text>
+          <circle cx="328" cy="216" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="220" font-size="10" fill="var(--ink-faint)" text-anchor="middle">8</text>
+          <text x="374" y="221" font-size="13" font-weight="600" fill="var(--ink-faint)">GND</text>
+          <text x="424" y="221" font-size="12" fill="var(--ink-faint)">ground</text>
+          <text x="374" y="235" font-size="9.5" fill="var(--accent)">“E” on a 64×64</text>
+
+          <!-- row 5 : pins 9 / 10 -->
+          <circle cx="232" cy="254" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="258" font-size="10" fill="var(--ink-faint)" text-anchor="middle">9</text>
+          <text x="186" y="259" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">A</text>
+          <text x="134" y="259" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO12</text>
+          <circle cx="328" cy="254" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="258" font-size="10" fill="var(--ink-faint)" text-anchor="middle">10</text>
+          <text x="374" y="259" font-size="13" font-weight="600" fill="var(--ink)">B</text>
+          <text x="424" y="259" font-size="12" fill="var(--ink-soft)">GPIO16</text>
+
+          <!-- row 6 : pins 11 / 12 -->
+          <circle cx="232" cy="292" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="296" font-size="10" fill="var(--ink-faint)" text-anchor="middle">11</text>
+          <text x="186" y="297" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">C</text>
+          <text x="134" y="297" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO17</text>
+          <circle cx="328" cy="292" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="296" font-size="10" fill="var(--ink-faint)" text-anchor="middle">12</text>
+          <text x="374" y="297" font-size="13" font-weight="600" fill="var(--ink)">D</text>
+          <text x="424" y="297" font-size="12" fill="var(--ink-soft)">GPIO18</text>
+
+          <!-- row 7 : pins 13 / 14 -->
+          <circle cx="232" cy="330" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="334" font-size="10" fill="var(--ink-faint)" text-anchor="middle">13</text>
+          <text x="186" y="335" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">CLK</text>
+          <text x="134" y="335" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO15</text>
+          <circle cx="328" cy="330" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="334" font-size="10" fill="var(--ink-faint)" text-anchor="middle">14</text>
+          <text x="374" y="335" font-size="13" font-weight="600" fill="var(--ink)">LAT</text>
+          <text x="424" y="335" font-size="12" fill="var(--ink-soft)">GPIO32</text>
+
+          <!-- row 8 : pins 15 / 16 -->
+          <circle cx="232" cy="368" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="232" y="372" font-size="10" fill="var(--ink-faint)" text-anchor="middle">15</text>
+          <text x="186" y="373" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">OE</text>
+          <text x="134" y="373" font-size="12" fill="var(--ink-soft)" text-anchor="end">GPIO33</text>
+          <circle cx="328" cy="368" r="11" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="328" y="372" font-size="10" fill="var(--ink-faint)" text-anchor="middle">16</text>
+          <text x="374" y="373" font-size="13" font-weight="600" fill="var(--ink-faint)">GND</text>
+          <text x="424" y="373" font-size="12" fill="var(--ink-faint)">ground</text>
+
+          <!-- pin 1 callout -->
+          <text x="232" y="428" font-size="10" fill="var(--accent)" text-anchor="middle">pin 1 = square pad</text>
+        </svg>
+      </div>
+      <figcaption>Connector seen from the rear of the panel, key notch at the top. <b>If the panel silkscreen shows signal names, the silkscreen takes precedence</b> — some models label them <code>R0/G0/B0</code> and <code>R1/G1/B1</code> instead of <code>R1/R2</code>; they are the same signals.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 3. Table ================= -->
+  <section>
+    <h2>3 · Wire-by-wire summary</h2>
+    <p class="lede">The pinout is identical to the KiCad schematic, so the test setup carries over unchanged to the final board.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pin</th>
+            <th>Signal</th>
+            <th>ESP32</th>
+            <th>Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="pinno">1</td><td class="sig r">R1</td><td class="gpio">GPIO25</td><td class="note">Red, upper half (rows 0–15)</td></tr>
+          <tr><td class="pinno">2</td><td class="sig g">G1</td><td class="gpio">GPIO26</td><td class="note">Green, upper half</td></tr>
+          <tr><td class="pinno">3</td><td class="sig b">B1</td><td class="gpio">GPIO27</td><td class="note">Blue, upper half</td></tr>
+          <tr class="gndrow"><td class="pinno">4</td><td class="sig">GND</td><td class="gpio">GND</td><td class="note">Ground</td></tr>
+          <tr><td class="pinno">5</td><td class="sig r">R2</td><td class="gpio">GPIO21</td><td class="note">Red, lower half (rows 16–31)</td></tr>
+          <tr><td class="pinno">6</td><td class="sig g">G2</td><td class="gpio">GPIO22</td><td class="note">Green, lower half</td></tr>
+          <tr><td class="pinno">7</td><td class="sig b">B2</td><td class="gpio">GPIO23</td><td class="note">Blue, lower half</td></tr>
+          <tr class="gndrow"><td class="pinno">8</td><td class="sig">GND</td><td class="gpio">GND</td><td class="note">Ground — becomes “E” on a 64×64 panel</td></tr>
+          <tr><td class="pinno">9</td><td class="sig">A</td><td class="gpio">GPIO12</td><td class="note">Row address, bit 0</td></tr>
+          <tr><td class="pinno">10</td><td class="sig">B</td><td class="gpio">GPIO16</td><td class="note">Row address, bit 1</td></tr>
+          <tr><td class="pinno">11</td><td class="sig">C</td><td class="gpio">GPIO17</td><td class="note">Row address, bit 2</td></tr>
+          <tr><td class="pinno">12</td><td class="sig">D</td><td class="gpio">GPIO18</td><td class="note">Row address, bit 3</td></tr>
+          <tr><td class="pinno">13</td><td class="sig">CLK</td><td class="gpio">GPIO15</td><td class="note">Shift clock</td></tr>
+          <tr><td class="pinno">14</td><td class="sig">LAT</td><td class="gpio">GPIO32</td><td class="note">Row latch (also labelled STB)</td></tr>
+          <tr><td class="pinno">15</td><td class="sig">OE</td><td class="gpio">GPIO33</td><td class="note">Output enable, active low — controls brightness</td></tr>
+          <tr class="gndrow"><td class="pinno">16</td><td class="sig">GND</td><td class="gpio">GND</td><td class="note">Ground</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:22px">On the board, the silkscreened number <em>is</em> the GPIO number: <code>P25</code>, <code>D25</code>, <code>IO25</code> and <code>G25</code> all mean GPIO25. The physical pin order, however, is not sequential — read the silkscreen, do not count positions.</p>
+  </section>
+
+  <!-- ================= 4. Encoder + tilt ================= -->
+  <section>
+    <h2>4 · Rotary encoder and tilt switch</h2>
+    <p class="lede">Four inputs to add. The chosen pins avoid the 13 HUB75 signals, the <i>strapping</i> pins that can prevent boot, and the programming serial port.</p>
+
+    <figure>
+      <div class="figframe">
+        <svg viewBox="0 0 660 350" role="img" aria-label="Wiring of the rotary encoder and tilt switch to the ESP32: CLK to GPIO14, DT to GPIO19, SW to GPIO13, powered from 3.3 V, and the tilt switch on GPIO34 with a 10 kilohm pull-up resistor.">
+
+          <text x="126" y="38" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="middle">ROTARY ENCODER</text>
+          <rect x="40" y="48" width="172" height="150" rx="3" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="198" y="76"  font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">CLK</text>
+          <text x="198" y="104" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">DT</text>
+          <text x="198" y="132" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">SW</text>
+          <text x="198" y="160" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="end">+</text>
+          <text x="198" y="188" font-size="12" font-weight="600" fill="var(--ink-faint)" text-anchor="end">GND</text>
+
+          <text x="126" y="238" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="middle">TILT SWITCH</text>
+          <rect x="40" y="248" width="172" height="70" rx="3" fill="var(--surface-2)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="198" y="276" font-size="12" font-weight="600" fill="var(--ink)" text-anchor="end">terminal 1</text>
+          <text x="198" y="306" font-size="12" font-weight="600" fill="var(--ink-faint)" text-anchor="end">terminal 2</text>
+
+          <rect x="440" y="48" width="180" height="270" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="530" y="36" font-size="11" font-weight="600" fill="var(--accent)" text-anchor="middle">ESP32 DevKit</text>
+          <text x="456" y="76"  font-size="12" font-weight="600" fill="var(--ink)">GPIO14</text>
+          <text x="456" y="104" font-size="12" font-weight="600" fill="var(--ink)">GPIO19</text>
+          <text x="456" y="132" font-size="12" font-weight="600" fill="var(--ink)">GPIO13</text>
+          <text x="456" y="160" font-size="12" font-weight="600" fill="var(--accent)">3V3</text>
+          <text x="456" y="188" font-size="12" font-weight="600" fill="var(--ink-faint)">GND</text>
+          <text x="456" y="276" font-size="12" font-weight="600" fill="var(--ink)">GPIO34</text>
+          <text x="456" y="306" font-size="12" font-weight="600" fill="var(--ink-faint)">GND</text>
+
+          <g stroke-width="1.5" fill="none">
+            <line x1="212" y1="72"  x2="438" y2="72"  stroke="var(--ink-soft)"/>
+            <line x1="212" y1="100" x2="438" y2="100" stroke="var(--ink-soft)"/>
+            <line x1="212" y1="128" x2="438" y2="128" stroke="var(--ink-soft)"/>
+            <line x1="212" y1="156" x2="438" y2="156" stroke="var(--accent)"/>
+            <line x1="212" y1="184" x2="438" y2="184" stroke="var(--ink-faint)"/>
+            <line x1="212" y1="272" x2="438" y2="272" stroke="var(--ink-soft)"/>
+            <line x1="212" y1="302" x2="438" y2="302" stroke="var(--ink-faint)"/>
+          </g>
+
+          <line x1="340" y1="272" x2="340" y2="228" stroke="var(--sig-r)" stroke-width="1.5"/>
+          <rect x="332" y="234" width="16" height="30" fill="var(--surface)" stroke="var(--sig-r)" stroke-width="1.5"/>
+          <text x="356" y="222" font-size="11" font-weight="600" fill="var(--sig-r)">10 k to 3V3</text>
+          <text x="356" y="236" font-size="9.5" fill="var(--ink-soft)">required on GPIO34</text>
+          <circle cx="340" cy="272" r="3" fill="var(--ink-soft)"/>
+        </svg>
+      </div>
+      <figcaption>The encoder “+” goes to <b>3V3, never to 5 V</b>. A module powered from 5 V sends 5 V signals into inputs designed for 3.3 V.</figcaption>
+    </figure>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Signal</th><th>ESP32</th><th>Mode</th><th>Why this pin</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="sig">CLK (A)</td><td class="gpio">GPIO14</td><td class="note">INPUT_PULLUP</td><td class="note">Free, internal pull-up, not a <i>strapping</i> pin</td></tr>
+          <tr><td class="sig">DT (B)</td><td class="gpio">GPIO19</td><td class="note">INPUT_PULLUP</td><td class="note">Free, internal pull-up</td></tr>
+          <tr><td class="sig">SW</td><td class="gpio">GPIO13</td><td class="note">INPUT_PULLUP</td><td class="note">Next to GPIO14 on the board</td></tr>
+          <tr class="gndrow"><td class="sig">+</td><td class="gpio">3V3</td><td class="note">—</td><td class="note">Never 5 V</td></tr>
+          <tr class="gndrow"><td class="sig">GND</td><td class="gpio">GND</td><td class="note">—</td><td class="note">Common ground</td></tr>
+          <tr><td class="sig">Tilt</td><td class="gpio">GPIO34</td><td class="note">INPUT + 10 k</td><td class="note">Matches your KiCad schematic — external pull-up required</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>GPIO34 has no internal pull-up</h3>
+    <p>ESP32 pins 34 to 39 are input-only and <b>have no internal pull-up or pull-down resistors</b>. Without the 10 kΩ to 3V3, the input floats and the tilt switch will return random values. This is exactly what your KiCad schematic provides for.</p>
+    <p>For a quick breadboard test without a resistor, put the tilt switch on <code>GPIO4</code> as <code>INPUT_PULLUP</code> instead — but move it back to GPIO34 for the final board, so that test and production stay identical.</p>
+
+    <h3>The tilt switch circuit</h3>
+
+    <figure>
+      <div class="figframe">
+        <svg viewBox="0 0 460 360" role="img" aria-label="Tilt switch circuit: a 10 kilohm resistor connects 3.3 V to GPIO34, and the tilt switch connects GPIO34 to ground.">
+
+          <text x="150" y="30" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="middle">+3.3 V</text>
+          <line x1="126" y1="38" x2="174" y2="38" stroke="var(--accent)" stroke-width="2"/>
+          <line x1="150" y1="38" x2="150" y2="84" stroke="var(--ink-soft)" stroke-width="1.5"/>
+
+          <rect x="138" y="84" width="24" height="54" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="176" y="104" font-size="12" font-weight="600" fill="var(--ink)">R1</text>
+          <text x="176" y="121" font-size="12" fill="var(--ink-soft)">10 kΩ</text>
+
+          <line x1="150" y1="138" x2="150" y2="232" stroke="var(--ink-soft)" stroke-width="1.5"/>
+
+          <circle cx="150" cy="196" r="4" fill="var(--ink-soft)"/>
+          <line x1="150" y1="196" x2="292" y2="196" stroke="var(--ink-soft)" stroke-width="1.5"/>
+          <text x="300" y="193" font-size="13" font-weight="600" fill="var(--ink)">GPIO34</text>
+          <text x="300" y="209" font-size="10" fill="var(--ink-faint)">input only</text>
+
+          <circle cx="150" cy="236" r="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <line x1="150" y1="236" x2="174" y2="270" stroke="var(--ink)" stroke-width="1.5"/>
+          <circle cx="167" cy="259" r="5" fill="var(--accent)"/>
+          <circle cx="150" cy="278" r="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="196" y="255" font-size="12" font-weight="600" fill="var(--ink)">tilt switch</text>
+          <text x="196" y="271" font-size="10" fill="var(--ink-faint)">rolling ball</text>
+
+          <line x1="150" y1="282" x2="150" y2="308" stroke="var(--ink-soft)" stroke-width="1.5"/>
+          <g stroke="var(--ink-faint)" stroke-width="2">
+            <line x1="132" y1="308" x2="168" y2="308"/>
+            <line x1="138" y1="316" x2="162" y2="316"/>
+            <line x1="144" y1="324" x2="156" y2="324"/>
+          </g>
+          <text x="150" y="345" font-size="11" fill="var(--ink-faint)" text-anchor="middle">GND</text>
+        </svg>
+      </div>
+      <figcaption>A classic pull-up circuit. At rest the resistor holds the input at 3.3 V; when the ball closes the contact, it shorts the input to ground.</figcaption>
+    </figure>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Contact state</th><th>GPIO34 voltage</th><th>digitalRead</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="note">Open — resting position</td><td class="sig">3.3 V</td><td class="gpio">HIGH</td></tr>
+          <tr><td class="note">Closed — tilted</td><td class="sig">0 V</td><td class="gpio">LOW</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin-top:22px">The logic is therefore <b>inverted</b>: <code>LOW</code> means “tilted”. Without the resistor, the input would be connected to nothing when the contact opens, and <code>digitalRead</code> would return noise.</p>
+
+    <p>A ball tilt switch bounces <b>far more than a button</b> — the ball rolls and makes several brief contacts before settling. Allow 50 to 100 ms of software debounce, versus 5 to 20 ms for an ordinary push button.</p>
+
+    <h3>Keeping 5 V for the encoder</h3>
+    <p>If your board routes +5 V near the encoder and you would rather not change that net, simply leave the module's <code>+</code> pin <b>unconnected</b>. The module's pull-up resistors then have no current path, and the ESP32's internal pull-ups do the job. The contacts still short CLK and DT to ground: it works the same, with two fewer components.</p>
+
+    <h3>Pins to avoid</h3>
+    <p>Still free: <code>GPIO0</code>, <code>GPIO2</code>, <code>GPIO4</code>, <code>GPIO5</code>, <code>GPIO35</code>, <code>GPIO36</code>, <code>GPIO39</code>. Three of them are traps — <code>GPIO0</code> is the BOOT button and would interfere with uploading, and <code>GPIO2</code> and <code>GPIO5</code> are <i>strapping</i> pins: a contact closed at power-up would prevent the board from booting.</p>
+
+    <h3>Debouncing</h3>
+    <p>A mechanical encoder bounces for several milliseconds. Without filtering, one detent will produce two or three increments. Two 100 nF capacitors, CLK–GND and DT–GND, handle most of it in hardware; the rest is handled in software with an interrupt-driven state machine.</p>
+  </section>
+
+  <!-- ================= 5. Power ================= -->
+  <section>
+    <h2>5 · Power</h2>
+    <p class="lede">This is what decides whether the setup works or not. A P3 64×32 draws up to 4 A at full white — the power comes from the external supply, never from the ESP32.</p>
+
+    <figure>
+      <div class="figframe">
+        <svg viewBox="0 0 700 320" role="img" aria-label="Power topology: the 5V supply powers the panel directly, USB powers the ESP32, the HUB75 ribbon connects the two, and the ESP32 must never power the panel.">
+          <defs>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+            </marker>
+            <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ink-soft)"/>
+            </marker>
+          </defs>
+
+          <!-- PSU -->
+          <rect x="24" y="52" width="164" height="72" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="106" y="82" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">5 V PSU</text>
+          <text x="106" y="102" font-size="12" fill="var(--accent)" text-anchor="middle">4 A minimum</text>
+
+          <!-- USB -->
+          <rect x="24" y="204" width="164" height="58" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="106" y="229" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">USB — PC</text>
+          <text x="106" y="247" font-size="11" fill="var(--ink-soft)" text-anchor="middle">power + upload</text>
+
+          <!-- Panel -->
+          <rect x="420" y="40" width="230" height="86" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="535" y="72" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">64×32 PANEL</text>
+          <text x="535" y="92" font-size="11" fill="var(--ink-soft)" text-anchor="middle">V+ / GND terminals</text>
+          <text x="535" y="110" font-size="11" fill="var(--ink-soft)" text-anchor="middle">+ HUB75 connector</text>
+
+          <!-- ESP32 -->
+          <rect x="420" y="196" width="230" height="72" rx="3" fill="var(--surface)" stroke="var(--rule)" stroke-width="1.5"/>
+          <text x="535" y="228" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">ESP32 DevKit</text>
+          <text x="535" y="248" font-size="11" fill="var(--ink-soft)" text-anchor="middle">logic only — ~250 mA</text>
+
+          <!-- PSU -> panel : thick -->
+          <line x1="188" y1="84" x2="412" y2="80" stroke="var(--accent)" stroke-width="4" marker-end="url(#ar2)"/>
+          <text x="298" y="66" font-size="12" font-weight="600" fill="var(--accent)" text-anchor="middle">5 V — up to 4 A</text>
+          <text x="298" y="104" font-size="10" fill="var(--ink-faint)" text-anchor="middle">short, thick wires</text>
+
+          <!-- USB -> esp32 -->
+          <line x1="188" y1="233" x2="412" y2="233" stroke="var(--ink-soft)" stroke-width="1.5" marker-end="url(#ar3)"/>
+          <text x="298" y="221" font-size="11" fill="var(--ink-soft)" text-anchor="middle">5 V logic</text>
+
+          <!-- ribbon between panel and esp32 -->
+          <line x1="470" y1="126" x2="470" y2="196" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="1 0"/>
+          <circle cx="470" cy="126" r="3" fill="var(--ink-soft)"/>
+          <circle cx="470" cy="196" r="3" fill="var(--ink-soft)"/>
+          <text x="484" y="156" font-size="11" fill="var(--ink-soft)">HUB75 ribbon</text>
+          <text x="484" y="172" font-size="11" fill="var(--ink-soft)">13 signals + ground</text>
+
+          <!-- forbidden path -->
+          <path d="M 420 214 L 386 214 L 386 100 L 420 100" fill="none" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <g stroke="var(--danger)" stroke-width="2.5" stroke-linecap="round">
+            <line x1="378" y1="150" x2="394" y2="166"/>
+            <line x1="394" y1="150" x2="378" y2="166"/>
+          </g>
+          <text x="366" y="152" font-size="11" font-weight="600" fill="var(--danger)" text-anchor="end">never the 5 V</text>
+          <text x="366" y="167" font-size="11" font-weight="600" fill="var(--danger)" text-anchor="end">from the ESP32</text>
+        </svg>
+      </div>
+      <figcaption>The two devices are powered separately and connected only by the data ribbon. <b>The common ground runs through HUB75 pins 4, 8 and 16</b> — this is what makes the logic levels valid.</figcaption>
+    </figure>
+
+    <div class="callout">
+      <h3>What breaks the setup</h3>
+      <p>Powering the panel from the ESP32's <code>5V</code> or <code>VIN</code> pin pushes several amps through the DevKit's regulator and the USB connector traces. At best the board reboots in a loop; at worst the regulator fails.</p>
+      <p>If you want a single source, do the opposite: the 5 V supply feeds the panel <em>and</em> the ESP32's <code>VIN</code> pin — and in that case, unplug USB before powering up.</p>
+    </div>
+  </section>
+
+  <!-- ================= 6. Before power-up ================= -->
+  <section>
+    <h2>6 · Before first power-up</h2>
+
+    <ul class="checks">
+      <li><b>Common ground</b> — at least one HUB75 GND pin connected to an ESP32 GND. Without it, nothing works.</li>
+      <li><b>Short ribbon</b> — under 20 cm. Without the 74HCT245s, the noise margin at 3.3 V is small.</li>
+      <li><b>Low brightness</b> — the sketch starts at 90/255. Only raise it once the power supply has been validated.</li>
+      <li><b>Terminal polarity</b> — V+ on red, GND on black. Reversing them destroys the panel instantly.</li>
+      <li><b>Power the ESP32 first</b> — so the panel inputs are not left floating at start-up.</li>
+    </ul>
+
+    <h3>The test setup does without the 74HCT245s</h3>
+    <p>Most panels accept 3.3 V directly over a short ribbon. The level shifters in the KiCad schematic are still required on the final board: they guarantee the noise margin and allow a longer ribbon.</p>
+  </section>
+
+  <!-- ================= 7. Troubleshooting ================= -->
+  <section>
+    <h2>7 · If the image is wrong</h2>
+    <p class="lede">Each symptom points to a specific group of wires.</p>
+
+    <dl class="symptoms">
+      <div class="symptom">
+        <dt>Screen completely black</dt>
+        <dd>Wrong connector (try the other one), or an <code>FM6126A</code> driver: uncomment <code>mxconfig.driver</code> in the sketch.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Only one half lights up</dt>
+        <dd>The R2/G2/B2 trio (pins 5-6-7) or R1/G1/B1 (1-2-3) is not connected.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Colours swapped</dt>
+        <dd>The “colour bars” test should show red, green, blue, yellow, cyan, magenta, white from left to right. If not, two wires of an RGB trio are crossed.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Rows duplicated or scrambled</dt>
+        <dd>One of the address wires A, B, C or D (pins 9 to 12) is misplaced or missing.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Image shifted by one pixel</dt>
+        <dd>Set <code>mxconfig.clkphase</code> to <code>true</code>.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Panel very dim or off</dt>
+        <dd>OE (connector pin 15, GPIO33) is not connected. It is the signal that enables the display. GPIO15 is CLK.</dd>
+      </div>
+      <div class="symptom">
+        <dt>Flicker, stray pixels</dt>
+        <dd>Ribbon too long or ground missing. Shorten it, and check GND continuity.</dd>
+      </div>
+      <div class="symptom">
+        <dt>The ESP32 reboots in a loop</dt>
+        <dd>Insufficient 5 V supply, or the panel is drawing its current through the board. Go back over section 5.</dd>
+      </div>
+      <div class="symptom">
+        <dt>The board no longer boots at all</dt>
+        <dd>GPIO12 is a <i>strapping</i> pin: if the panel pulls it high at power-up, the ESP32 does not boot. Move <code>A_PIN</code> to GPIO4 for testing (not GPIO5: it is a strapping pin too, see above).</dd>
+      </div>
+    </dl>
+  </section>
+
+  <footer>
+    P3 64×32 panel · 1/16 scan · ESP32-HUB75-MatrixPanel-DMA library
+  </footer>
+
+</div>
+
+</body>
+</html>
+

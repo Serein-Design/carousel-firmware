@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Carousel partition table for 4 MB boards, fixed for good: only a cable
+# flash can change it, OTA cannot. NVS stays where every table puts it, so
+# settings survive the switch.
+#   app0/app1  two 1.75 MB slots for signed OTA updates (firmware ~1.13 MB)
+#   littlefs   384 KB for content (images, GIFs, apps), updated without restart;
+#              the firmware finds it by this name. Boards flashed before this
+#              table have none: images need this one cable flash.
+#   coredump   crash dumps, read over USB
+# Name,   Type, SubType,  Offset,   Size,     Flags
+nvs,      data, nvs,      0x9000,   0x5000,
+otadata,  data, ota,      0xe000,   0x2000,
+app0,     app,  ota_0,    0x10000,  0x1C0000,
+app1,     app,  ota_1,    0x1D0000, 0x1C0000,
+littlefs, data, spiffs,   0x390000, 0x60000,
+coredump, data, coredump, 0x3F0000, 0x10000,

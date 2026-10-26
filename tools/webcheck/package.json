@@ -1,0 +1,11 @@
+{
+  "name": "carousel-webcheck",
+  "private": true,
+  "description": "Browser checks of the settings page: overflow, target sizes, contrast, axe",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "devDependencies": {
+    "axe-core": "4.14.0",
+    "playwright": "1.64.0"
+  }
+}

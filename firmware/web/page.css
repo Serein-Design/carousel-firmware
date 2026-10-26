@@ -1,0 +1,1203 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* The stylesheet every page links, readable. One declaration per line and
+   never a value across two: tools/webcheck/assets.mjs drops the comments,
+   trims and joins the lines, compresses the result and writes
+   firmware/src/web_assets.cpp. Run it after every edit. System fonts only;
+   the one file it loads is the poster sheet next to it, the other images
+   are inline data. */
+:root{
+  --noir:#0d0906;
+  --bord:#60151c;
+  --beige:#e7d1b9;
+  --or:#dd934a;
+  --warm:#f0c9a0;
+  --mute:#b39a82;
+  --line:#33231a;
+  --edge:#7d6452;
+  --well:#1a120d;
+  --err:#c8564a;
+  --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 107 107'%3E%3Cpath d='M102 91C102 92 101 93 100 94C100 95 99 95 98 96C97 98 95 99 93 100C89 103 85 104 80 104C76 104 71 103 68 101C66 99 64 98 63 96C61 95 60 93 60 91C60 86 66 84 70 84C72 83 74 83 76 83L77 83C78 83 80 83 81 83L84 83L88 83L90 83C93 83 95 83 97 83C99 83 102 83 104 82C106 81 107 79 107 77C107 74 106 71 105 69C103 67 101 64 99 63C96 61 94 60 91 59C89 58 86 57 83 57C80 57 76 58 73 59C70 60 67 62 65 64C59 68 55 73 52 79C51 80 50 82 49 83C49 85 48 86 47 87C45 90 43 93 40 95C38 97 35 100 33 101C30 103 26 104 23 104C18 104 13 100 10 97C6 92 4 87 4 82C4 76 6 71 10 67C12 65 15 63 17 62C20 61 23 60 26 60C28 60 31 61 34 62C36 64 38 65 40 67C42 69 44 71 45 74C46 75 46 76 46 78C47 79 47 80 47 81L47 82C47 81 47 81 48 80L51 75C51 74 51 72 51 71L51 45C51 45 51 44 51 43L48 46C47 46 47 46 47 46L47 69C45 67 44 65 43 64C41 63 39 61 37 60C34 58 30 57 25 57C19 57 12 60 7 64C5 66 3 69 2 72C1 75 0 79 0 82C0 88 2 94 7 99C9 101 11 103 14 105C17 106 20 107 23 107C27 107 31 106 34 104C37 103 41 101 43 98C46 96 49 93 51 90C53 88 54 85 56 83C58 78 61 74 64 71C67 68 69 65 73 63C76 61 79 60 83 60C88 60 92 62 96 65C98 66 99 68 100 69C102 71 103 73 103 76C103 76 103 77 102 78C102 79 101 79 100 79C99 80 97 80 95 80C93 80 90 80 88 80C85 80 81 80 78 80L77 80C75 80 74 80 72 80C69 80 67 81 65 82C61 83 56 86 56 91C56 96 61 101 66 103C70 106 75 107 81 107C86 107 91 106 96 103C98 101 100 100 102 98C103 97 104 96 105 95C106 94 106 92 107 91C107 91 107 91 106 91L106 91L105 91L104 91L102 91ZM102 34C102 35 102 35 101 36C101 36 100 37 99 38C98 40 96 41 94 42C90 45 85 47 80 47C76 47 71 46 68 43C66 42 64 41 63 39C62 38 60 36 60 34C60 29 66 27 70 26C72 26 74 26 76 26L77 26C78 26 80 26 81 26L84 26L88 26L90 26C93 26 95 26 97 26C99 26 102 26 104 25C106 24 107 22 107 20C107 17 106 14 105 12C103 10 101 7 99 6C96 4 94 3 91 2C89 1 86 0 83 0C80 0 76 1 73 2C70 3 67 5 65 7C62 9 60 11 58 14C56 16 54 19 52 22C51 23 50 25 49 26C49 28 48 29 47 30C45 33 43 36 40 38C38 40 35 43 33 44C30 46 26 47 23 47C20 47 16 46 14 44C11 43 9 40 7 37C7 36 6 35 6 34C6 33 6 32 5 31L2 33C2 33 2 33 1 33C2 38 5 43 9 45C13 48 18 50 23 50C27 50 31 49 34 47C37 46 41 44 43 41C46 39 49 36 51 33C53 31 54 28 56 26C58 21 61 17 64 14C67 11 69 8 73 6C76 4 79 3 83 3C88 3 92 5 96 8C98 9 99 10 100 12C102 14 103 16 103 18C103 19 103 20 102 21C102 22 101 22 100 22C99 23 97 23 95 23C93 23 90 23 88 23C85 23 81 23 78 23L77 23C75 23 74 23 72 23C69 23 67 24 65 24C61 26 56 29 56 34C56 39 61 43 66 46C70 48 75 50 81 50C86 50 91 49 96 46C98 44 100 43 102 41C103 40 104 39 105 38C105 37 106 36 106 36C106 35 107 35 107 34L102 34ZM7 13C7 17 10 19 13 21C16 22 19 23 23 24C24 24 26 25 28 25C30 26 31 26 33 27C35 27 38 28 40 30C40 30 41 30 41 30C41 31 42 31 42 31L43 30C43 30 44 29 44 29C41 26 37 25 33 24C30 23 27 23 24 22C22 21 20 21 18 20C15 19 11 17 11 13C11 9 15 6 18 5C21 3 25 3 28 3C32 3 36 4 40 6C41 7 43 8 44 9C45 10 45 10 46 11C46 11 46 12 46 12L49 10C49 10 50 10 50 9C47 6 44 4 40 2C37 1 32 0 28 0C24 0 19 1 15 3C11 5 7 8 7 13Z'/%3E%3C/svg%3E")
+}
+*,::before,::after{
+  box-sizing:border-box
+}
+html{
+  background:var(--noir);
+  color:var(--beige);
+  color-scheme:dark;
+  -webkit-text-size-adjust:100%;
+  scrollbar-color:#5a4434 var(--noir)
+}
+html{
+  scroll-padding-bottom:88px
+}
+/* a column the window's height at least: main grows, so on a short page
+   the footer sits on the bottom edge instead of leaving a gap under it */
+body{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  min-height:100svh;
+  margin:0;
+  background:var(--noir);
+  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  caret-color:var(--or);
+  -webkit-tap-highlight-color:transparent
+}
+::selection{
+  background:var(--or);
+  color:var(--noir)
+}
+a{
+  color:inherit;
+  text-underline-offset:.22em;
+  text-decoration-thickness:1px;
+  text-decoration-color:var(--edge)
+}
+a:hover{
+  text-decoration-color:currentColor
+}
+:focus-visible{
+  outline:2px solid var(--or);
+  outline-offset:2px
+}
+h1,h2,h3,p,ul,ol,fieldset{
+  margin:0;
+  padding:0
+}
+h1,h3{
+  font-weight:700;
+  line-height:1.1;
+  letter-spacing:-.01em;
+  text-wrap:balance
+}
+h1{
+  font-size:32px
+}
+h2{
+  font-size:12px;
+  line-height:1.3;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--beige);
+  font-weight:600;
+  margin-bottom:12px
+}
+h3{
+  font-size:17px;
+  margin:24px 0 4px
+}
+code{
+  font:14px/1.5 ui-monospace,Menlo,monospace;
+  color:var(--warm);
+  overflow-wrap:anywhere
+}
+.w{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 16px
+}
+.vh{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap
+}
+.skip{
+  position:absolute;
+  left:-999px
+}
+.skip:focus{
+  left:16px;
+  top:8px;
+  background:var(--or);
+  color:var(--noir);
+  padding:8px 12px;
+  z-index:9
+}
+header .w{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:60px
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  font-weight:600;
+  font-size:17px;
+  text-decoration:none
+}
+/* The Serein square, se over de (the brand's carre-blanc.svg, scaled to
+   107 units and rounded to whole ones: no difference at 28 px), beige */
+.brand::before{
+  content:"";
+  flex:none;
+  width:28px;
+  height:28px;
+  background:var(--beige);
+  -webkit-mask:var(--m) center/contain no-repeat;
+  mask:var(--m) center/contain no-repeat
+}
+.host{
+  font-size:14px;
+  color:var(--mute);
+  white-space:nowrap
+}
+nav{
+  border-bottom:1px solid var(--line)
+}
+nav .w{
+  display:flex;
+  flex-wrap:wrap;
+  column-gap:22px
+}
+nav a{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:44px;
+  min-height:48px;
+  font-size:15px;
+  color:var(--mute);
+  text-decoration:none
+}
+nav a:hover{
+  color:var(--beige)
+}
+nav a[aria-current]{
+  color:var(--beige);
+  box-shadow:inset 0 -2px var(--or)
+}
+main{
+  display:block;
+  flex:1 0 auto;
+  padding:24px 0 56px
+}
+.sec{
+  margin-top:40px
+}
+.lead{
+  max-width:60ch;
+  margin-top:8px;
+  color:var(--mute)
+}
+small,.hint{
+  display:block;
+  max-width:65ch;
+  margin-top:8px;
+  font-size:14px;
+  color:var(--mute)
+}
+.st{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+  font-size:15px
+}
+.st span{
+  color:var(--mute)
+}
+.st b{
+  font-weight:600;
+  text-align:right;
+  overflow-wrap:anywhere
+}
+/* a session row: the colour square stays with the name, a long name wraps */
+.st .sn{
+  display:flex;
+  align-items:center;
+  min-width:0;
+  color:var(--beige);
+  overflow-wrap:anywhere
+}
+.tn{
+  flex:none;
+  width:10px;
+  height:10px;
+  margin-right:10px
+}
+.num{
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap
+}
+/* stage */
+.stage{
+  padding:16px 16px 20px;
+  animation:up 1.6s cubic-bezier(.16,1,.3,1);
+  color:var(--warm);
+  background:radial-gradient(120% 90% at 50% 0,#7a1d26,var(--bord) 45%,#2a0a0e)
+}
+.live{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--or)
+}
+.stage .live{
+  color:var(--warm)
+}
+.live::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--or)
+}
+@keyframes up{
+  from{
+    filter:brightness(.25)
+  }
+}
+/* At most 40 % of the window tall, the frame fitted inside: a 32 x 64
+   portrait frame drawn full width pushed the screen's name below the first
+   window (webcheck "fold"), also after a tilt the page has not seen */
+.led{
+  display:block;
+  width:100%;
+  max-width:640px;
+  height:auto;
+  max-height:40vh;
+  object-fit:contain;
+  margin:12px auto 0;
+  border:6px solid #140a07;
+  background:#060403;
+  box-shadow:0 18px 40px rgba(0,0,0,.55);
+  image-rendering:pixelated
+}
+.act{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:4px 16px;
+  margin-top:12px
+}
+.act h1{
+  font-size:min(56px,12.5vw);
+  line-height:1;
+  letter-spacing:-.02em;
+  color:var(--beige);
+  overflow-wrap:anywhere
+}
+.act p,.next{
+  font-size:15px
+}
+.next{
+  margin-top:6px
+}
+.next b{
+  font-weight:600
+}
+/* controls */
+label,legend{
+  display:block;
+  margin:16px 0 6px;
+  font-size:15px
+}
+/* a group of options (a screen's style): its legend reads as a field's label */
+fieldset{
+  min-width:0;
+  border:0
+}
+legend{
+  padding:0
+}
+input,select,button,textarea{
+  font:inherit;
+  color:inherit;
+  border-radius:0;
+  min-height:48px;
+  margin:0
+}
+input:not([type=checkbox]):not([type=radio]):not([type=file]),select{
+  width:100%;
+  padding:0 12px;
+  background:var(--well);
+  border:1px solid var(--edge)
+}
+input:hover,select:hover{
+  border-color:var(--mute)
+}
+input::placeholder{
+  color:#9c846e
+}
+select{
+  -webkit-appearance:none;
+  appearance:none;
+  padding-right:40px!important;
+  background:var(--well) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e7d1b9' stroke-width='1.5'/%3E%3C/svg%3E") right 14px center no-repeat
+}
+[aria-invalid=true]{
+  border-color:var(--err)!important
+}
+button,::file-selector-button{
+  padding:0 18px;
+  background:transparent;
+  border:1px solid var(--edge);
+  font-weight:600;
+  cursor:pointer;
+  touch-action:manipulation;
+  white-space:nowrap
+}
+button:hover,::file-selector-button:hover{
+  border-color:var(--beige)
+}
+button:active{
+  transform:translateY(1px)
+}
+button:disabled{
+  opacity:.35;
+  cursor:default;
+  transform:none;
+  border-color:var(--edge)
+}
+.p{
+  background:var(--or);
+  border-color:var(--or);
+  color:var(--noir)
+}
+.p:hover{
+  background:#e8a462;
+  border-color:#e8a462
+}
+.del{
+  color:#f2a493
+}
+input[type=file]{
+  width:100%;
+  font-size:15px;
+  color:var(--mute)
+}
+::file-selector-button{
+  min-height:48px;
+  margin-right:12px;
+  color:var(--beige)
+}
+.row{
+  display:flex;
+  gap:8px;
+  align-items:flex-end
+}
+.row>:first-child{
+  flex:1;
+  min-width:0
+}
+.r{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 12px
+}
+.r>.f{
+  grid-column:1/-1
+}
+.ck{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:48px;
+  margin:8px 0 0;
+  cursor:pointer
+}
+.ck input,.op input{
+  flex:none;
+  width:22px;
+  height:22px;
+  min-height:0;
+  accent-color:var(--or)
+}
+.go{
+  display:inline-flex;
+  align-items:center;
+  min-height:44px;
+  font-weight:600
+}
+.go::after,.mv::before,summary::after{
+  content:"";
+  width:8px;
+  height:8px;
+  border:solid currentColor;
+  border-width:2px 2px 0 0
+}
+.go::after{
+  margin-left:10px;
+  transform:rotate(45deg)
+}
+/* brightness */
+.lv{
+  display:flex;
+  align-items:center;
+  gap:12px
+}
+.lv button{
+  position:relative;
+  width:48px;
+  flex:none;
+  padding:0
+}
+.lv button::before,.pl::after{
+  content:"";
+  position:absolute;
+  left:16px;
+  top:22px;
+  width:14px;
+  height:2px;
+  background:currentColor
+}
+.pl::after{
+  transform:rotate(90deg)
+}
+.steps{
+  flex:1;
+  display:flex;
+  gap:6px
+}
+.steps i{
+  flex:1;
+  height:8px;
+  background:#3d2c21
+}
+.steps .on{
+  background:var(--or)
+}
+/* running order */
+.strip{
+  display:flex;
+  gap:6px;
+  list-style:none;
+  margin-top:4px
+}
+.strip li{
+  width:64px;
+  font-size:12px;
+  line-height:1.35;
+  color:var(--mute)
+}
+.strip b{
+  display:block;
+  color:var(--beige);
+  font-weight:600;
+  overflow-wrap:anywhere
+}
+.th{
+  --h:32px;
+  display:block;
+  width:calc(var(--h)*2);
+  height:var(--h);
+  margin-bottom:6px;
+  background:#060403;
+  outline:1px solid var(--line)
+}
+/* a screen poster: its cell of the sheet, one cell per screen, stacked */
+i.th{
+  background-image:url(p.png);
+  background-position:0 calc(var(--p,0)*-1*var(--h));
+  background-size:100% auto;
+  background-repeat:no-repeat;
+  image-rendering:pixelated
+}
+.th.b{
+  --h:64px
+}
+.strip [aria-current] .th{
+  outline:2px solid var(--or);
+  outline-offset:1px
+}
+.strip [aria-current]{
+  color:var(--or)
+}
+.list{
+  list-style:none;
+  border-top:1px solid var(--line)
+}
+.list>li{
+  border-bottom:1px solid var(--line)
+}
+.sr{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:56px
+}
+.sr .ck{
+  flex:1;
+  min-width:0;
+  gap:8px;
+  margin:0;
+  font-size:16px
+}
+.sr .th{
+  position:relative;
+  flex:none;
+  margin:0
+}
+/* The screen on show: a small live dot on its poster's corner, drawn over
+   it, so no row changes size or moves (the script moves the class) */
+.at .th::after{
+  content:"";
+  position:absolute;
+  top:-4px;
+  right:-4px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--or);
+  box-shadow:0 0 0 2px var(--noir)
+}
+.n{
+  min-width:2ch;
+  text-align:right;
+  font-size:15px;
+  color:var(--mute);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap
+}
+.nm{
+  min-width:0;
+  font-weight:600;
+  overflow-wrap:anywhere
+}
+.nm small{
+  margin:0;
+  font-weight:400;
+  font-size:13px
+}
+.ck input:not(:checked)~.nm{
+  color:var(--mute);
+  font-weight:400
+}
+.ck input:not(:checked)~.th{
+  opacity:.45
+}
+.tag{
+  margin-left:8px;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--warm);
+  font-weight:600;
+  white-space:nowrap
+}
+.mv{
+  display:grid;
+  place-items:center;
+  width:44px;
+  min-height:44px;
+  height:44px;
+  padding:0;
+  border-color:var(--line)
+}
+.mv::before{
+  transform:translateY(2px) rotate(-45deg)
+}
+.mv.d::before{
+  transform:translateY(-2px) rotate(135deg)
+}
+/* a row's one-line summary, and the way to its screen's page */
+.nm .sm{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--warm)
+}
+.gt,.bk,.gp{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:44px;
+  min-height:44px;
+  flex:none
+}
+/* The gear, beige: a ring and a ring of eight teeth, as a mask like the
+   brand mark. .gp holds its column on a row without settings */
+.gt::before{
+  content:"";
+  width:22px;
+  height:22px;
+  background:var(--beige);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000'%3E%3Ccircle cx='12' cy='12' r='6.5' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' stroke-width='3' stroke-dasharray='3.2 3.87'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000'%3E%3Ccircle cx='12' cy='12' r='6.5' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='9' stroke-width='3' stroke-dasharray='3.2 3.87'/%3E%3C/svg%3E") center/contain no-repeat
+}
+.bk::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border:solid currentColor;
+  border-width:2px 2px 0 0;
+  transform:rotate(45deg)
+}
+.bk{
+  gap:10px;
+  color:var(--mute)
+}
+.bk::before{
+  transform:rotate(-135deg)
+}
+/* a screen's page: its styles as cards, the poster above the choice */
+.sp legend{
+  margin:24px 0 12px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase
+}
+.sp>fieldset:first-child legend{
+  margin-top:0
+}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(154px,1fr));
+  gap:12px
+}
+.card{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:10px;
+  align-items:start;
+  margin:0;
+  padding:12px;
+  border:1px solid var(--line);
+  cursor:pointer
+}
+.card:has(:checked){
+  border-color:var(--or)
+}
+.card .th{
+  grid-column:1/-1;
+  margin:0
+}
+.card input{
+  width:22px;
+  height:22px;
+  min-height:0;
+  margin:0;
+  accent-color:var(--or)
+}
+.card small{
+  margin:2px 0 0
+}
+/* The drag handle: only with scripts, which move the row (SCREENS_SCRIPT),
+   in the arrows' place. touch-action:none, so a finger on it drags at once,
+   without the long press iOS asks elsewhere, and does not scroll the page;
+   no callout or selection on a long touch. Three lines in the muted
+   colour, over 3:1. */
+.dg{
+  display:none
+}
+@media (scripting:enabled){
+  .mv{
+    display:none
+  }
+  .dg{
+    display:grid;
+    place-items:center;
+    flex:none;
+    width:44px;
+    height:44px;
+    padding:0;
+    border:0;
+    color:var(--mute);
+    cursor:grab;
+    touch-action:none;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none
+  }
+}
+.dg::before{
+  content:"";
+  width:18px;
+  height:12px;
+  border-block:2px solid;
+  background:linear-gradient(currentColor 0 0) center/100% 2px no-repeat
+}
+/* The row in hand rides over the others, which step aside, eased (none
+   under reduced motion: the rule at the end) */
+.dr{
+  position:relative;
+  z-index:1;
+  background:var(--well);
+  outline:1px solid var(--edge)
+}
+.dr .dg{
+  cursor:grabbing
+}
+.list:has(.dr)>li:not(.dr){
+  transition:translate .15s ease-out
+}
+details{
+  margin:-6px 0 10px 56px
+}
+summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  font-size:15px;
+  color:var(--warm);
+  cursor:pointer;
+  list-style:none
+}
+summary::-webkit-details-marker{
+  display:none
+}
+summary::after{
+  width:7px;
+  height:7px;
+  transform:rotate(135deg) translate(-2px,2px)
+}
+details[open]>summary::after{
+  transform:rotate(-45deg)
+}
+.sd{
+  padding:0 0 16px
+}
+.sd>label:first-child{
+  margin-top:4px
+}
+.sv{
+  position:sticky;
+  bottom:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-top:24px;
+  margin-inline:-16px;
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  background:var(--noir);
+  border-top:1px solid var(--edge);
+  box-shadow:0 -8px 16px rgba(13,9,6,.7)
+}
+.sv small{
+  margin:0
+}
+/* notices */
+.er,.ok{
+  margin:0 0 20px;
+  padding:12px 16px;
+  border:1px solid var(--edge);
+  font-size:15px
+}
+.er{
+  border-color:var(--err);
+  background:#2a0f0d
+}
+/* Running order's save banner, under the lead in the side column */
+aside>.er,aside>.ok{
+  margin-top:20px
+}
+/* images */
+.space{
+  height:8px;
+  margin-top:10px;
+  background:#3d2c21
+}
+.space i{
+  display:block;
+  height:100%;
+  background:var(--beige)
+}
+.imgs{
+  list-style:none;
+  border-top:1px solid var(--line)
+}
+.imgs li{
+  display:grid;
+  grid-template-columns:128px 1fr;
+  gap:12px 16px;
+  align-items:start;
+  padding:16px 0;
+  border-bottom:1px solid var(--line)
+}
+.imgs li>.th{
+  grid-row:span 2
+}
+/* the GIF itself, twice its size, every pixel kept square */
+.imgs .th{
+  --h:64px;
+  margin:0;
+  image-rendering:pixelated
+}
+.imgs .pt{
+  width:64px;
+  height:128px
+}
+.imgs b{
+  display:block;
+  font-weight:600;
+  overflow-wrap:anywhere
+}
+.imgs form{
+  grid-column:2
+}
+/* the French tag is wider than a phone's text column: it wraps */
+.imgs .tag{
+  margin:0;
+  white-space:normal
+}
+.empty{
+  padding:32px 16px;
+  border:1px dashed var(--edge);
+  text-align:center
+}
+.empty .th{
+  --h:64px;
+  margin:0 auto 16px
+}
+/* choices */
+.op{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:52px;
+  margin:0;
+  border-bottom:1px solid var(--line);
+  cursor:pointer
+}
+.op span{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere
+}
+/* an option's one-line description, under its name */
+.op small{
+  margin:2px 0 0
+}
+.op .num{
+  flex:none;
+  color:var(--mute);
+  font-size:14px
+}
+/* a three-way choice: one segment per radio, which lies over its segment so
+   the whole of it is the target; the chosen one filled */
+.sg{
+  display:flex;
+  margin-top:12px
+}
+.sg label{
+  position:relative;
+  flex:1;
+  margin:0 0 0 -1px
+}
+.sg input{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-height:0;
+  margin:0;
+  opacity:0;
+  cursor:pointer
+}
+.sg span{
+  display:grid;
+  place-items:center;
+  min-height:44px;
+  border:1px solid var(--edge);
+  font-size:15px
+}
+.sg :checked+span{
+  background:var(--or);
+  border-color:var(--or);
+  color:var(--noir);
+  font-weight:600
+}
+.sg :focus-visible+span{
+  outline:2px solid var(--or);
+  outline-offset:2px
+}
+/* Wi-Fi: the known network on its own, the others folded under a label;
+   each row's lock, bars and word in muted beige, the lit bars in beige */
+.nl{
+  border-top:1px solid var(--line)
+}
+.nl .num{
+  display:flex;
+  align-items:center;
+  gap:8px
+}
+.nw{
+  margin:32px 0 0
+}
+.nw summary{
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase
+}
+.k::before{
+  content:"";
+  width:11px;
+  height:14px;
+  background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 14'%3E%3Cpath d='M2 6V1h7v5H7.5V2.5h-4V6zM0 6h11v8H0z'/%3E%3C/svg%3E");
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 14'%3E%3Cpath d='M2 6V1h7v5H7.5V2.5h-4V6zM0 6h11v8H0z'/%3E%3C/svg%3E")
+}
+.sb{
+  position:relative;
+  width:18px;
+  height:14px;
+  background:var(--edge);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 14'%3E%3Cpath d='M0 10h3v4H0zM5 7h3v7H5zM10 4h3v10h-3zM15 0h3v14h-3z'/%3E%3C/svg%3E");
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 14'%3E%3Cpath d='M0 10h3v4H0zM5 7h3v7H5zM10 4h3v10h-3zM15 0h3v14h-3z'/%3E%3C/svg%3E")
+}
+.sb::before{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  width:3px;
+  background:var(--beige)
+}
+.s2::before{
+  width:8px
+}
+.s3::before{
+  width:13px
+}
+.s4::before{
+  width:18px
+}
+.code{
+  font-size:28px;
+  letter-spacing:.3em;
+  text-align:center;
+  font-variant-numeric:tabular-nums
+}
+/* the sign-in code's six boxes (built by the page's script), 48 px wide
+   at 360 px, never more than 56 */
+.otp{
+  display:flex;
+  gap:8px;
+  max-width:376px
+}
+.otp input{
+  flex:1 1 0;
+  min-width:0;
+  height:56px;
+  text-align:center;
+  font:600 24px ui-monospace,Menlo,monospace
+}
+.narrow{
+  max-width:440px
+}
+.idx,.dk{
+  display:none
+}
+footer{
+  border-top:1px solid var(--line);
+  padding:24px 0 40px;
+  font-size:13px;
+  color:var(--mute)
+}
+footer small{
+  font-size:13px
+}
+/* Without scripts a row keeps its two arrows beside the way to its page's
+   column: at 360 px its poster halves and the gaps shrink, so a screen's
+   name keeps its words whole */
+@media (max-width:399px) and (scripting:none){
+  .sr{
+    gap:2px
+  }
+  .sr .ck{
+    gap:4px
+  }
+  .sr .th{
+    --h:16px
+  }
+}
+@media (max-width:379px){
+  .strip li:nth-child(5){
+    display:none
+  }
+}
+@media (max-width:1099px){
+  .strip li:nth-child(n+6){
+    display:none
+  }
+}
+@media (min-width:900px){
+  .w{
+    padding:0 40px
+  }
+  h1{
+    font-size:40px
+  }
+  .stage{
+    display:grid;
+    grid-template-columns:minmax(0,512px) 1fr;
+    gap:20px 48px;
+    align-items:end;
+    padding:32px
+  }
+  .bill{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    align-self:stretch;
+    gap:24px
+  }
+  /* an error page's stage has no frame: its words take the whole width */
+  .bill:only-child{
+    grid-column:1/-1
+  }
+  .next{
+    order:-1;
+    margin:0
+  }
+  .next{
+    font-size:32px;
+    line-height:1.15
+  }
+  .next b{
+    color:var(--beige)
+  }
+  .next .ni{
+    display:block;
+    margin-top:6px;
+    font-size:15px
+  }
+  .two>div>.sec:first-child{
+    margin-top:0
+  }
+  .led{
+    margin:0
+  }
+  .mb{
+    display:none
+  }
+  .dk{
+    display:flex
+  }
+  .act{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+    margin:0
+  }
+  .act h1{
+    font-size:72px
+  }
+  .q{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:48px
+  }
+  .strip{
+    gap:12px
+  }
+  .strip li{
+    width:128px;
+    font-size:13px
+  }
+  .strip .th{
+    --h:64px
+  }
+  .two{
+    display:grid;
+    grid-template-columns:300px minmax(0,1fr);
+    gap:64px;
+    align-items:start
+  }
+  .two>aside{
+    position:sticky;
+    top:24px
+  }
+  .two>aside .sv{
+    position:static;
+    margin-inline:0;
+    padding:0;
+    border:0;
+    box-shadow:none
+  }
+  .idx{
+    display:block;
+    list-style:none;
+    margin-top:24px;
+    border-top:1px solid var(--line)
+  }
+  .idx a{
+    display:flex;
+    align-items:center;
+    min-height:44px;
+    border-bottom:1px solid var(--line);
+    text-decoration:none;
+    color:var(--mute)
+  }
+  .idx a:hover{
+    color:var(--beige)
+  }
+  .imgs li{
+    grid-template-columns:128px 1fr auto;
+    align-items:center
+  }
+  .imgs li>.th{
+    grid-row:auto
+  }
+  .imgs form{
+    grid-column:3
+  }
+  .r3{
+    grid-template-columns:1fr 1fr 1fr
+  }
+  .r3>.f{
+    grid-column:auto
+  }
+}
+/* With scripts, the save bar waits for a change: hidden while the fields
+   hold what the page loaded, it rises in with "Unsaved changes", Save and
+   Discard (UNSAVED_SCRIPT sets .on). Without scripts this never applies and
+   Save stays in view, as before. */
+@media (scripting:enabled){
+  .sv:not(.on){
+    display:none!important
+  }
+  .sv{
+    flex-wrap:wrap;
+    gap:12px 16px;
+    animation:rise .2s ease-out
+  }
+  /* After a refused or failed save (form sv with data-d) the bar is up as
+     the page loads: it is there, not rising (a contrast check mid-rise read
+     Save half transparent) */
+  body:has(#sv[data-d]) .sv{
+    animation:none
+  }
+  .sv .u,.sv .dc{
+    display:block
+  }
+  .sv button{
+    flex:1
+  }
+  .sv small{
+    display:none
+  }
+}
+.u{
+  flex-basis:100%;
+  margin:0;
+  font-weight:600;
+  color:var(--warm)
+}
+@keyframes rise{
+  from{
+    transform:translateY(100%);
+    opacity:0
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  *{
+    animation:none!important;
+    transition:none!important
+  }
+}

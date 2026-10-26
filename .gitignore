@@ -1,0 +1,35 @@
+# PlatformIO
+.pio/
+firmware/.vscode/
+
+# Local config with real credentials (template: firmware/include/secrets.example.h)
+firmware/include/secrets.h
+
+# Arduino IDE / generated
+build/
+*.elf
+*.bin
+!firmware/certs/x509_crt_bundle.bin
+!data/places.bin
+*.map
+
+# Node (tools/webcheck)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Flash dumps (may contain Wi-Fi credentials from NVS)
+firmware/backup/
+
+# Mascot override: a local file, never distributed
+firmware/src/screens/mascot_override.cpp
+tools/simulator/mascot-override.js
