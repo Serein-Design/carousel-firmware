@@ -30,9 +30,12 @@ void placesUrl(char *out, size_t size, const char *version, const char *devUrl);
 // The query the settings page may send: 2 to 32 bytes of UTF-8
 bool placesQueryOk(const char *q, size_t len);
 
-// Reads len bytes of the file at offset into out; false when it could not
+// Reads len bytes of the file at offset into out; false when it could not.
+// release: closes the connection kept between reads, if any; the inflate
+// asks it when the heap cannot hold its decompressor beside the session.
 struct PlacesSource {
   virtual bool read(uint32_t offset, uint32_t len, uint8_t *out) = 0;
+  virtual void release() {}
 };
 
 static const uint8_t PLACES_RESULTS = 5;      // suggestions under the city field
@@ -174,6 +177,31 @@ bool phoneZone(const char *iana, char *city, size_t citySize, char *zone, size_t
 // a row: an hour, doubling to a day, plus spread, the panel's second of the
 // hour (metSlot), so that panels refused together do not come back together
 uint32_t locateRetryDelay(uint8_t failures, uint16_t spread);
+
+enum LocateResult : uint8_t {
+  LOCATE_FOUND,
+  LOCATE_NOT_FOUND,     // the table has no such city
+  LOCATE_UNREACHABLE,   // its trouble or the network's: ask again later
+  LOCATE_BUSY,          // no memory for now (pages served, a session open): soon
+};
+// The lookup that failed with e: busy for no memory, otherwise unreachable
+LocateResult locateFailure(PlacesError e);
+
+// The table's pacing between two lookups. Measured on the panel (v0.2.0):
+// a save, served with its page, assets and /place polls, left no memory
+// for the lookup, which the hour's backoff then put off by 101 min. Busy
+// is asked again in LOCATE_BUSY_S, LOCATE_BUSY_TRIES times (the page polls
+// /place for a minute); past them, a panel that never has the memory falls
+// back to the backoff, as an unreachable table.
+static const uint32_t LOCATE_BUSY_S = 15;
+static const uint8_t LOCATE_BUSY_TRIES = 8;
+struct LocatePace {
+  uint8_t failures = 0;   // unreachable or refused in a row, as locateRetryDelay counts them
+  uint8_t busy = 0;       // short waits since the last answer or the last long one
+};
+// Seconds before the next lookup after r (0: none pending), p updated;
+// spread as locateRetryDelay's
+uint32_t locateNext(LocatePace &p, LocateResult r, uint16_t spread);
 
 // UTC offset (seconds, east positive) -> POSIX TZ, which counts the other
 // way: UTC+2 is "UTC-2:00", India (UTC+5:30) "UTC-5:30"

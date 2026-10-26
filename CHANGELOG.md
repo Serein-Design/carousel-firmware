@@ -19,6 +19,15 @@ All notable changes to this project. The format follows
   gallery before keeps its old copies next to the new ones, and the pet starts afresh under
   its new storage key.
 
+### Fixed
+- Location: a city lookup that runs out of memory, for example while the settings page that
+  saved the city is still loading, is tried again after 15 s. It no longer waits the hour or
+  more meant for an unreachable server. After 8 short tries it falls back to that wait. The
+  city search answers "busy" in that case, and the page asks again.
+- Location: reading the city table needs less memory at its peak. When the memory runs
+  short, the panel closes the secure connection before it unpacks a piece of the table, and
+  opens a new one for the next piece.
+
 ## [0.2.0] - 2026-10-26
 
 ### Changed
