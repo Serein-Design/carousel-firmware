@@ -33,11 +33,6 @@ void placesServe();
 // httpsNext before a forecast
 void placesTidy(bool httpsNext);
 
-enum LocateResult : uint8_t {
-  LOCATE_FOUND,
-  LOCATE_NOT_FOUND,     // the table has no such city
-  LOCATE_UNREACHABLE,   // its trouble or the network's: ask again later
-};
 // The HTTPS task's: the city chosen on the settings page (cid >= 0, its
 // number in the table) or typed (the best match) -> hit and its POSIX zone
 LocateResult placesLocate(const char *city, int32_t cid, PlaceHit &hit, char *zone,

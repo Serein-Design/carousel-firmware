@@ -195,8 +195,18 @@ bool PlacesTable::block(PlacesSource &src, Slot &slot, int16_t index, uint32_t o
     free(in);
     return fail(PLACES_REFUSED);
   }
-  // About 11 KB, for the inflating only
+  // 10 992 bytes on the ESP32 (three Huffman tables of 3 488), for the
+  // inflating only. The read before kept its TLS session open for the next
+  // block: two 16 KB record buffers and their context. Refused beside it,
+  // the session is closed, which frees three times what the decompressor
+  // needs: the next block pays a handshake, only on a heap that short.
+  // Allocating it before the read instead would hold it through that
+  // read's handshake, when there is one: a higher peak, not a lower one.
   tinfl_decompressor *d = (tinfl_decompressor *)malloc(sizeof(tinfl_decompressor));
+  if (!d) {
+    src.release();
+    d = (tinfl_decompressor *)malloc(sizeof(tinfl_decompressor));
+  }
   if (!d) {
     free(in);
     return fail(PLACES_NO_MEMORY);
@@ -598,6 +608,24 @@ uint32_t locateRetryDelay(uint8_t failures, uint16_t spread) {
   const uint32_t day = 24 * 3600, jitter = spread % 3600;
   const uint8_t n = failures ? failures - 1 : 0;
   return (n >= 5 ? day : std::min(day, 3600u << n)) + jitter;
+}
+
+LocateResult locateFailure(PlacesError e) {
+  return e == PLACES_NO_MEMORY ? LOCATE_BUSY : LOCATE_UNREACHABLE;
+}
+
+uint32_t locateNext(LocatePace &p, LocateResult r, uint16_t spread) {
+  if (r == LOCATE_FOUND || r == LOCATE_NOT_FOUND) {
+    p = LocatePace();
+    return 0;
+  }
+  if (r == LOCATE_BUSY && p.busy < LOCATE_BUSY_TRIES) {
+    p.busy++;
+    return LOCATE_BUSY_S;
+  }
+  p.busy = 0;
+  if (p.failures < 255) p.failures++;
+  return locateRetryDelay(p.failures, spread);
 }
 
 // POSIX's offset: west positive. "-2:00" for UTC+2
