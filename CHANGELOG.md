@@ -6,6 +6,12 @@ All notable changes to this project. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Simulator: three examples take generic names, ALIENS, FLAP and PET, instead of those of
+  other companies' games and toys; the drawings are unchanged. A browser that saved the
+  gallery before keeps its old copies next to the new ones, and the pet starts afresh under
+  its new storage key.
+
 ## [0.2.0] - 2026-10-26
 
 ### Changed

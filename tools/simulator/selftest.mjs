@@ -122,10 +122,19 @@ const kept = loader({ [ui.STORAGE_KEY]: JSON.stringify([{ ...seeded, orientation
 if (kept[0].orientation !== 'both') failures.push(`PLASMA: a saved landscape copy stays ${kept[0].orientation}`);
 if (kept[1].orientation !== 'landscape') failures.push(`IMAGE: a user animation of that name became ${kept[1].orientation}`);
 
+// Three examples took generic names (ALIENS, FLAP, PET) in version 19: a list saved by
+// version 18 is offered them at their place in the gallery, around PONG and REFLEXES.
+const generic = ['ALIENS', 'FLAP', 'PET'];
+const v18 = ui.loadAnimations().filter(a => !generic.includes(a.name));
+const v19 = names(loader({ [ui.STORAGE_KEY]: JSON.stringify(v18), [ui.VERSION_KEY]: '18' }).loadAnimations());
+for (const g of generic) if (!v19.includes(g)) failures.push(`${g}: not added to a list saved by version 18`);
+if (v19.indexOf('PONG') !== v19.indexOf('ALIENS') + 1) failures.push('ALIENS: not right before PONG');
+if (v19.indexOf('PET') + 1 !== v19.indexOf('REFLEXES')) failures.push('PET: not right before REFLEXES');
+
 // The product ships its own screens, Nimbus and generic examples only: no third-party
 // character, meme, brand or logo. Fan art lives in a separate community pack that the
 // user loads from a file (Open...), in the format the simulator itself exports.
-const thirdParty = /\b(spotify|openai|xai|grok|codex|pepe|nyan|doge|among us|creeper|snorlax|pac-?man|tetris|dvd|this is fine)\b/i
+const thirdParty = /\b(spotify|openai|xai|grok|codex|pepe|nyan|doge|among us|creeper|snorlax|pac-?man|tetris|dvd|this is fine|tamagotchi|flappy|invaders)\b/i
   .exec(html);
 if (thirdParty) failures.push(`third-party name in simulator.html: "${thirdParty[0]}"`);
 if (!/<p class="help">[^<]*community[^<]*<\/p>/i.test(html)) failures.push('help: no line on loading community examples from a file');
