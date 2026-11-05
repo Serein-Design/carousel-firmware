@@ -38,6 +38,8 @@ jobs:
             0x1000 $B/bootloader.bin 0x8000 $B/partitions.bin \
             0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin \
             0x10000 $B/firmware.bin
+      - name: Licenses (the binary ships with its notices)
+        run: zip -r "dist/carousel-${{ github.ref_name }}-licenses.zip" LICENSE NOTICE THIRD_PARTY_NOTICES.md LICENSES
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}

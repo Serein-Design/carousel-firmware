@@ -8,3 +8,7 @@ Serein Design, the se/de mark, Carousel and Nimbus are trademarks of Serein
 Design; the AGPL does not grant rights to them.
 
 Third-party components keep their own licenses: see THIRD_PARTY_NOTICES.md.
+
+The corresponding source of each release is the repository at the tag of that release
+(AGPL-3.0, section 6). Each release also attaches carousel-<tag>-licenses.zip with this
+file, LICENSE, THIRD_PARTY_NOTICES.md and the license texts of LICENSES/.
