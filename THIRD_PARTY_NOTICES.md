@@ -10,12 +10,12 @@ not grant rights to them.
 
 | Component | Version | License |
 | --- | --- | --- |
-| [ESP32-HUB75-MatrixPanel-DMA](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA) | 3.0.14 | MIT, © 2018 Faptastic |
+| [ESP32-HUB75-MatrixPanel-DMA](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA) | 3.0.14 | MIT, © 2018-2032 Faptastic |
 | [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) | 1.12.6 | BSD 2-Clause, © 2012 Adafruit Industries |
 | [Adafruit BusIO](https://github.com/adafruit/Adafruit_BusIO) | 1.17.4 | MIT, © 2017 Adafruit Industries |
-| [Arduino core for ESP32](https://github.com/espressif/arduino-esp32) | 2.0.17 (PlatformIO `espressif32@6.10.0`) | LGPL-2.1 |
+| [Arduino core for ESP32](https://github.com/espressif/arduino-esp32) | 2.0.17 (PlatformIO `espressif32@6.10.0`) | LGPL-2.1-or-later ([text](LICENSES/LGPL-2.1.txt)); some files Apache-2.0, © Espressif Systems |
 | [ESP-IDF](https://github.com/espressif/esp-idf) (through the Arduino core) | 4.4.7 | Apache-2.0, © Espressif Systems (Shanghai) Co., Ltd. |
-| Mozilla's CA certificate list, as published by [curl](https://curl.se/docs/caextract.html) (`firmware/certs/x509_crt_bundle.bin`) | as of 2026-09-25 | MPL-2.0 |
+| Mozilla's CA certificate list, as published by [curl](https://curl.se/docs/caextract.html) (`firmware/certs/x509_crt_bundle.bin`) | as of 2026-09-25 | MPL-2.0 ([text](LICENSES/MPL-2.0.txt)) |
 | [tz database](https://www.iana.org/time-zones) (tzdata), each zone name and its POSIX TZ string (`firmware/src/tz_names.cpp`) | 2026e | public domain |
 
 ### ESP-IDF components and libraries in the binary
@@ -27,23 +27,29 @@ must carry them.
 
 | Component | License | Text |
 | --- | --- | --- |
-| [Mbed TLS](https://github.com/Mbed-TLS/mbedtls) 2.28 (`mbedtls`, `mbedcrypto`, `mbedx509`) | Apache-2.0 (Mbed TLS is dual-licensed Apache-2.0 or GPL-2.0-or-later; Carousel uses it under Apache-2.0), © The Mbed TLS Contributors | [Apache-2.0](LICENSES/Apache-2.0.txt) |
+| [Mbed TLS](https://github.com/Mbed-TLS/mbedtls) 2.28.7 (`mbedtls`, `mbedcrypto`, `mbedx509`) | Apache-2.0 (Mbed TLS is dual-licensed Apache-2.0 or GPL-2.0-or-later; Carousel uses it under Apache-2.0), © The Mbed TLS Contributors | [Apache-2.0](LICENSES/Apache-2.0.txt) |
 | [esp-mqtt](https://github.com/espressif/esp-mqtt) (`mqtt`) | Apache-2.0, © Espressif Systems; `mqtt_msg.c` is BSD 3-Clause, © 2014 Stephen Robinson | [Apache-2.0](LICENSES/Apache-2.0.txt), [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) |
-| [lwIP](https://savannah.nongnu.org/projects/lwip/) (`lwip`) | BSD 3-Clause, © 2001, 2002 Swedish Institute of Computer Science | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) |
+| [lwIP](https://savannah.nongnu.org/projects/lwip/) 2.1.2 (`lwip`) | BSD 3-Clause, © 2001, 2002 Swedish Institute of Computer Science | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) |
 | [FreeRTOS kernel](https://github.com/FreeRTOS/FreeRTOS-Kernel) 10.4.3 (`freertos`) | MIT, © 2020 Amazon.com, Inc. or its affiliates; Espressif's changes are Apache-2.0 | [MIT](LICENSES/MIT.txt), [Apache-2.0](LICENSES/Apache-2.0.txt) |
 | wpa_supplicant / hostapd (`wpa_supplicant`) | BSD 3-Clause, © 2002-2019 Jouni Malinen and contributors | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) |
 | [LittleFS](https://github.com/littlefs-project/littlefs) (`esp_littlefs`) | BSD 3-Clause, © 2022 The littlefs authors, © 2017 Arm Limited | [BSD-3-Clause](LICENSES/BSD-3-Clause.txt) |
 | [esp_littlefs](https://github.com/joltwallet/esp_littlefs) (the port to ESP-IDF) | MIT, © 2020 Brian Pugh | [MIT](LICENSES/MIT.txt) |
 | [cJSON](https://github.com/DaveGamble/cJSON) (`json`) | MIT, © 2009-2017 Dave Gamble and cJSON contributors | [MIT](LICENSES/MIT.txt) |
-| [nghttp2](https://github.com/nghttp2/nghttp2) (`nghttp`) | MIT, © Tatsuhiro Tsujikawa and nghttp2 contributors | [MIT](LICENSES/MIT.txt) |
+| [http-parser](https://github.com/nodejs/http-parser) 2.7.0 (`nghttp`: only its `http_parser.c` is linked, not nghttp2) | MIT, © Joyent, Inc. and other Node contributors; the parsing code derives from NGINX, BSD 2-Clause, © Igor Sysoev | [MIT](LICENSES/MIT.txt), [BSD-2-Clause](LICENSES/BSD-2-Clause.txt) |
 | [protobuf-c](https://github.com/protobuf-c/protobuf-c) (`protobuf-c`) | BSD 2-Clause, © Dave Benson and the protobuf-c authors | [BSD-2-Clause](LICENSES/BSD-2-Clause.txt) |
 | [QR Code generator library](https://www.nayuki.io/page/qr-code-generator-library) by Project Nayuki (`qrcode`) | MIT, © Project Nayuki; Espressif's wrapper is Apache-2.0 | [MIT](LICENSES/MIT.txt), [Apache-2.0](LICENSES/Apache-2.0.txt) |
 | Newlib, the C library (`libc`, `libm`, `newlib`) | a set of BSD-style licenses | [Newlib](LICENSES/Newlib.txt) |
-| `libgcc`, `libstdc++` | GPL-3.0-or-later with the GCC Runtime Library Exception | [GCC-exception-3.1](LICENSES/GCC-exception-3.1.txt) |
-| Other ESP-IDF components (`esp_wifi`, `esp_netif`, `esp-tls`, `tcp_transport`, `mdns`, `nvs_flash`, `spi_flash`, `driver`, `heap`, `esp_system`, `esp_timer`, `app_update`, `vfs`, `wifi_provisioning`, `protocomm`, `esp_ipc`, `esp_event`, `esp_eth`, `soc`, `hal`, ...) | Apache-2.0, © Espressif Systems | [Apache-2.0](LICENSES/Apache-2.0.txt) |
+| `libgcc`, `libstdc++` (GCC 8.4.0, the `toolchain-xtensa-esp32` package) | GPL-3.0-or-later with the GCC Runtime Library Exception | [GCC-exception-3.1](LICENSES/GCC-exception-3.1.txt) |
+| `tinfl_decompress`, the DEFLATE decoder of [miniz](https://github.com/richgel999/miniz) (called by `firmware/src/places_logic.cpp`; it runs from the ESP32's mask ROM, so no copy of it is in the binary; the ROM carries miniz 1.15, `MZ_VERSION` "9.1.15" in `rom/miniz.h`) | public domain (miniz up to 1.15 is released unencumbered by Rich Geldreich) | none needed |
+| Other ESP-IDF components (`esp_wifi`, `esp_netif`, `tcpip_adapter`, `esp-tls`, `tcp_transport`, `mdns`, `nvs_flash`, `spi_flash`, `driver`, `heap`, `esp_system`, `esp_hw_support`, `esp_phy`, `esp_pm`, `esp_timer`, `app_update`, `bootloader_support`, `efuse`, `espcoredump`, `esp_diagnostics`, `vfs`, `wifi_provisioning`, `protocomm`, `esp_ipc`, `esp_event`, `esp_eth`, `bt`, `pthread`, `soc`, `hal`, ...) | Apache-2.0, © Espressif Systems | [Apache-2.0](LICENSES/Apache-2.0.txt) |
 | Espressif's precompiled radio libraries (`net80211`, `pp`, `phy`, `coexist`, `mesh`, `smartconfig`, `btdm_app`) | Apache-2.0, © Espressif Systems | [Apache-2.0](LICENSES/Apache-2.0.txt) |
 
-The Arduino core also carries `libb64` (public domain) for base64.
+The Arduino core also carries `libb64` (public domain) for base64, and the Arduino libraries
+the firmware links (`WiFi`, `WiFiClientSecure`, `WebServer`, `HTTPClient`, `FS`, `LittleFS`,
+`Preferences`, `ESPmDNS`, `ArduinoOTA`, `Update`, `DNSServer`), under the core's license
+(LGPL-2.1-or-later; some of their files are Apache-2.0, © Espressif Systems). The LGPL lets
+you replace these libraries: the complete source of the firmware is the release's tag, and
+`pio run` relinks it against another build of them.
 
 ## Data the firmware fetches
 

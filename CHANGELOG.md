@@ -6,6 +6,13 @@ All notable changes to this project. The format follows
 
 ## [Unreleased]
 
+### Added
+- Each release attaches `carousel-<tag>-licenses.zip` (LICENSE, NOTICE, THIRD_PARTY_NOTICES.md
+  and the license texts of `LICENSES/`), and the license texts now include the LGPL-2.1 of
+  the Arduino core and the MPL-2.0 of the CA list. THIRD_PARTY_NOTICES.md follows what the
+  build links: exact versions of Mbed TLS (2.28.7) and lwIP (2.1.2), http-parser in place of
+  nghttp2, the Arduino libraries, the GCC runtime and the ROM's tinfl.
+
 ### Changed
 - Simulator: three examples take generic names, ALIENS, FLAP and PET, instead of those of
   other companies' games and toys; the drawings are unchanged. A browser that saved the
