@@ -3841,8 +3841,8 @@ function anim(f, init) {
 }
 </script>
 
-<script type="text/plain" data-example="INVADERS">
-// Invaders on autopilot: the invaders march in rhythm and speed up,
+<script type="text/plain" data-example="ALIENS">
+// Aliens on autopilot: the aliens march in rhythm and speed up,
 // the cannon dodges and fires, the shields get worn away, a red saucer flies by now and then.
 const SPRITES = [
   [["..#..", ".###.", "#.#.#", ".#.#."], ["..#..", ".###.", "#.#.#", "#...#"]],
@@ -4120,8 +4120,8 @@ function anim(f, init) {
 }
 </script>
 
-<script type="text/plain" data-example="FLAPPY">
-// Flappy Nimbus: Nimbus flaps his arms to get between the pipes.
+<script type="text/plain" data-example="FLAP">
+// Flap: Nimbus flaps his arms to get between the pipes.
 // The autopilot is almost perfect... almost. Score and best score at game over.
 let bird, pipes, score, dead, scroll, next;
 let record = 0;
@@ -5297,13 +5297,13 @@ function anim(f, init) {
 }
 </script>
 
-<script type="text/plain" data-example="TAMAGOTCHI">
-// Tamagotchi Nimbus: he gets hungry, bored, makes poops and sleeps at night (real time).
+<script type="text/plain" data-example="PET">
+// Pet Nimbus: he gets hungry, bored, makes poops and sleeps at night (real time).
 // Q / D pick an action in the bottom menu, S runs it:
 //   apple = eat, ball = play, drop = wash, moon = turn the light off / on.
 // He remembers everything, even if you reload the page. If he is forgotten too long, he sulks.
 const SPEEDUP = 1;                 // 30 for testing: time passes 30 times faster
-const KEY = "tamagotchiPet";       // localStorage key
+const KEY = "nimbusPet";           // localStorage key
 // The pet's saved fields keep their original French names so that saved pets still load:
 // faim = hunger, joie = happiness, crottes = poops, lumiere = light on,
 // dernier = time of the last update, prochaineCrotte = time of the next poop.
@@ -9705,9 +9705,9 @@ const GALLERY_ORDER = ['NIMBUS', 'CODE', 'DANCE', 'SLEEP', 'RUN', 'LIFE', 'BALL'
                        'HOURGLASS', 'AQUARIUM', 'CITY', 'FIREWORKS', 'WEATHER', 'SNAKE',
                        'ROCKET', 'SYNTHWAVE', 'SURF',
                        'STOCKS', 'CRYPTO', 'COUNTDOWN', 'FOLLOWERS', 'IMAGE',
-                       'INVADERS', 'PONG', 'FLAPPY', 'TUNNEL', 'BLACKHOLE', 'CLOCK',
+                       'ALIENS', 'PONG', 'FLAP', 'TUNNEL', 'BLACKHOLE', 'CLOCK',
                        'FORECAST', 'ISS', 'AIR', 'MESSAGE', 'WORDS', 'BINARY', 'POMODORO', 'BRICKS',
-                       'TAMAGOTCHI', 'REFLEXES', 'AURORA', 'LAVA',
+                       'PET', 'REFLEXES', 'AURORA', 'LAVA',
                        'MAZE', 'ECOSYSTEM', 'CAMPFIRE',
                        // portrait gallery
                        'EIFFEL', 'WATERFALL', 'GALTON', 'JUMP', 'PENDULUM', 'CANDLE', 'DIVE', 'BEANSTALK',
@@ -9719,7 +9719,7 @@ const GALLERY_ORDER = ['NIMBUS', 'CODE', 'DANCE', 'SLEEP', 'RUN', 'LIFE', 'BALL'
                        'SNOWGLOBE', 'CAT', 'HANOI', 'VOLCANO', 'SEASONS', 'COFFEE'];
 
 // Increase when examples are added: they will be offered to lists already saved
-const EXAMPLES_VERSION = 18;
+const EXAMPLES_VERSION = 19;
 const VERSION_KEY = 'simulateurLed.versionExemples';   // original spelling kept, see STORAGE_KEY
 
 // --- Migration of data saved by the French version of the simulator ------------
