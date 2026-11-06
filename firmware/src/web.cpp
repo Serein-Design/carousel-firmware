@@ -845,8 +845,15 @@ static bool pageGuard() {
   return false;
 }
 
+// Sign-in's own check of the visitor: false once it answered
+static bool loginAllowed() {
+  if (hostAllowed() && !crossSite()) return true;
+  sendError(403);
+  return false;
+}
+
 static void handleLogin() {
-  if (!hostAllowed() || crossSite()) { sendError(403); return; }
+  if (!loginAllowed()) return;
   if (!pairingCheck(server.arg("code"))) { sendSignIn(true); return; }
   server.sendHeader("Set-Cookie", authSetCookie());
   server.sendHeader("Location", returnPath(server.arg("next").c_str()));
@@ -1634,6 +1641,76 @@ private:
 
 static FormRoutes formRoutes;
 
+// --- Every other POST: the library reads the body, up to a cap ------------
+
+// A body within its route's cap (web_forms.h) is read by the library, as
+// before: the handler gets its parameters, the query string's included,
+// which a raw handler never sees. A larger one, or a negative length, takes
+// the raw path instead: the route's own checks of the visitor answer first
+// (host, site, then the token or the session), then 413 (400), and not one
+// byte of the body is read. A multipart body never comes here: the library
+// parses it before any handler can look at its size. No uri: every other
+// request that carries a body, answered as an unknown address.
+class CappedRoute : public RequestHandler {
+public:
+  using Admit = bool (*)();           // false once it answered
+  using Refuse = void (*)(int code);  // 413 or 400
+  CappedRoute(const char *uri, HTTPMethod method, void (*fn)(), Admit admit, Refuse refuse)
+      : uri_(uri), method_(method), fn_(fn), admit_(admit), refuse_(refuse), cap_(bodyCap(uri)) {}
+
+  bool canHandle(HTTPMethod method, String uri) override {
+    const bool mine = uri_ ? (method_ == HTTP_ANY || method == method_) && uri == uri_
+                           : method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH ||
+                             method == HTTP_DELETE;   // the methods whose body the library reads
+    if (mine) answered_ = false;   // once per request, before its body
+    return mine;
+  }
+  bool canUpload(String) override { return false; }
+  bool canRaw(String) override { return bodyVerdict(server.clientContentLength(), cap_) != BODY_READ; }
+
+  void raw(WebServer &, String, HTTPRaw &r) override {
+    if (r.status != RAW_START || answered_) return;
+    answered_ = true;
+    // As in FormRoutes: the previous request's length setting is still there
+    server.setContentLength(CONTENT_LENGTH_NOT_SET);
+    if (admit_()) {
+      const BodyVerdict v = bodyVerdict(server.clientContentLength(), cap_);
+      Serial.printf("[WEB] body refused unread (%d)\n", (int)v);
+      refuse_(v == BODY_TOO_LARGE ? 413 : 400);
+    }
+    lingeringClose();
+    r.totalSize = SIZE_MAX;   // nothing left for the library to read
+  }
+
+  bool handle(WebServer &, HTTPMethod, String) override {
+    if (!answered_) fn_();
+    return true;
+  }
+
+private:
+  const char *uri_;
+  HTTPMethod method_;
+  void (*fn_)();
+  Admit admit_;
+  Refuse refuse_;
+  size_t cap_;
+  bool answered_ = false;
+};
+
+static void apiBodyRefused(int code) {
+  apiError(code, code == 413 ? "body too large" : "bad Content-Length");
+}
+static void pageBodyRefused(int code) { sendError(code); }
+
+static void onApiPost(const char *uri, void (*fn)()) {
+  server.addHandler(new CappedRoute(uri, HTTP_POST, fn, apiAllowed, apiBodyRefused));
+}
+// The pages' routes: the session first, as FormRoutes, then the size; the
+// lock is the handler's (pageGuard)
+static void onPagePost(const char *uri, void (*fn)(), HTTPMethod method = HTTP_POST) {
+  server.addHandler(new CappedRoute(uri, method, fn, signedIn, pageBodyRefused));
+}
+
 // GET /preview: the frame the panel shows, as a BMP. Never signedIn(): its
 // sign-in page would put a code on the panel. The code is checked before and
 // after the copy, so a code that came up meanwhile is never sent. Served
@@ -1723,23 +1800,43 @@ static void handlePlace() {
 static void handleStylesheet() { sendAsset("text/css", STYLESHEET_GZ, STYLESHEET_GZ_LEN, true); }
 static void handlePosters() { sendAsset("image/png", POSTERS_PNG, POSTERS_PNG_LEN, false); }
 
+// Captive portal: the phone checks its connection by calling a Google,
+// Apple or Microsoft page. The access point's DNS sends them all here;
+// redirecting them to the Wi-Fi page makes it open by itself.
+static void handleNotFound() {
+  if (wifiSetupMode) {
+    server.sendHeader("Location", "http://" + WiFi.softAPIP().toString() + "/wifi");
+    server.send(302, "text/plain", "");
+  } else if (machinePath(server.uri().c_str())) {
+    server.send(404, "text/plain", "404");   // the API and the hooks: a machine answer
+  } else {
+    sendError(404);
+  }
+}
+
+// An unknown address's oversized body gets the unknown address's answer
+static bool notFoundFirst() {
+  handleNotFound();
+  return false;
+}
+
 void webBegin() {
   server.on("/id", HTTP_GET, handleId);
   // Before any page, setup mode included (the captive page links it)
   server.on(UriBraces("/s/{}/c.css"), HTTP_GET, handleStylesheet);
   server.on(UriBraces("/s/{}/p.png"), HTTP_GET, handlePosters);
   // Setup access point open: the home page becomes the Wi-Fi page
-  server.on("/login", HTTP_POST, handleLogin);
+  server.addHandler(new CappedRoute("/login", HTTP_POST, handleLogin, loginAllowed, pageBodyRefused));
   server.on("/api/info",       HTTP_GET,  apiInfo);
-  server.on("/api/screen",     HTTP_POST, apiScreen);
-  server.on("/api/brightness", HTTP_POST, apiBrightness);
-  server.on("/api/notify",     HTTP_POST, apiNotify);
-  server.on("/api/text",       HTTP_POST, apiText);
+  onApiPost("/api/screen", apiScreen);
+  onApiPost("/api/brightness", apiBrightness);
+  onApiPost("/api/notify", apiNotify);
+  onApiPost("/api/text", apiText);
   server.on("/api/images",     HTTP_GET,  apiImages);
   server.addHandler(&apiUpload);
-  server.on("/api/images/delete", HTTP_POST, apiImageDelete);
-  server.on("/api/images/show",   HTTP_POST, apiImageShow);
-  server.on("/", []() {
+  onApiPost("/api/images/delete", apiImageDelete);
+  onApiPost("/api/images/show",   apiImageShow);
+  onPagePost("/", []() {
     if (!pageGuard()) return;
     if (wifiSetupMode) { sendWifiPage(nullptr, nullptr, false, server.hasArg("scan")); return; }
     // The old address of IMAGE's block, from a page opened before the update
@@ -1749,7 +1846,7 @@ void webBegin() {
       return;
     }
     sendStage();
-  });
+  }, HTTP_ANY);
   server.on("/preview", HTTP_GET, handlePreview);
   server.on("/images/f", HTTP_GET, handleImageFile);
   server.on("/panel", HTTP_GET, []() {
@@ -1773,13 +1870,13 @@ void webBegin() {
     if (pageGuard()) sendWifiPage(nullptr, nullptr, false, server.hasArg("scan"));
   });
   server.addHandler(&formRoutes);   // POST /show, /brightness, /text, /wifi
-  server.on("/sauver", HTTP_POST, []() { if (pageGuard()) handleSave(); });
+  onPagePost("/sauver", []() { if (pageGuard()) handleSave(); });
   server.on("/places", HTTP_GET, handlePlaces);
   server.on("/place", HTTP_GET, handlePlace);
   server.addHandler(&pageUpload);
-  server.on("/images/delete", HTTP_POST, handleImageDelete);
-  server.on("/images/show",   HTTP_POST, handleImageShow);
-  server.on("/update", HTTP_POST, []() {
+  onPagePost("/images/delete", handleImageDelete);
+  onPagePost("/images/show",   handleImageShow);
+  onPagePost("/update", []() {
     if (!pageGuard()) return;
     if (server.arg("do") == "install") updateInstallNow();
     else                               updateCheckNow();
@@ -1787,7 +1884,7 @@ void webBegin() {
     server.send(303, "text/plain", "");
   });
   // Every browser signed in so far has to type a code again, except this one
-  server.on("/signout", HTTP_POST, []() {
+  onPagePost("/signout", []() {
     if (!pageGuard()) return;
     authSignOutEverywhere();
     server.sendHeader("Set-Cookie", authSetCookie());
@@ -1808,7 +1905,7 @@ void webBegin() {
   server.on("/install", HTTP_GET, handleInstall);
   // The hooks fold's buttons (Panel page). A POST behind the page's checks
   // only: a GET, from a link or an image of another page, changes nothing.
-  server.on("/hooks", HTTP_POST, []() {
+  onPagePost("/hooks", []() {
     if (!pageGuard()) return;
     const String what = server.arg("do");
     if (what == "renew") {
@@ -1827,7 +1924,7 @@ void webBegin() {
   // The purge happens in loop(), the only writer of the table. Redirect to
   // the page instead of returning it: built right away, it would still show
   // the sessions just cleared.
-  server.on("/purge", HTTP_POST, []() {
+  onPagePost("/purge", []() {
     if (!pageGuard()) return;
     AgentEvent ev = {};
     ev.state = EV_PURGE;
@@ -1835,19 +1932,10 @@ void webBegin() {
     server.sendHeader("Location", "/panel");
     server.send(303, "text/plain", "");
   });
-  // Captive portal: the phone checks its connection by calling a Google,
-  // Apple or Microsoft page. The access point's DNS sends them all here;
-  // redirecting them to the Wi-Fi page makes it open by itself.
-  server.onNotFound([]() {
-    if (wifiSetupMode) {
-      server.sendHeader("Location", "http://" + WiFi.softAPIP().toString() + "/wifi");
-      server.send(302, "text/plain", "");
-    } else if (machinePath(server.uri().c_str())) {
-      server.send(404, "text/plain", "404");   // the API and the hooks: a machine answer
-    } else {
-      sendError(404);
-    }
-  });
+  server.onNotFound(handleNotFound);
+  // Last: every other request with a body, a POST to an unknown address or
+  // to a GET route included, held to BODY_CAP_SMALL
+  server.addHandler(new CappedRoute(nullptr, HTTP_ANY, handleNotFound, notFoundFirst, pageBodyRefused));
   static const char *HEADERS[] = {"Cookie", "Origin", "Sec-Fetch-Site", "Authorization",
                                   "X-Hook-Token", "Accept-Encoding"};
   server.collectHeaders(HEADERS, sizeof(HEADERS) / sizeof(HEADERS[0]));

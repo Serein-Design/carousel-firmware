@@ -33,6 +33,10 @@ accents and typographic punctuation. What the panel keeps depends on the call: a
 French letters and drops the other accents ("ñ" shows as "n"); an image's stored name drops
 every accent ("été.gif" becomes `ete.gif`).
 
+A body is at most 512 bytes, 1 KB for `/api/notify` and `/api/text`: a larger one is refused
+with 413 `{"error":"body too large"}` before it is read, once the token is checked. A message
+of the longest the panel keeps fits in either encoding, every character escaped.
+
 Answers are JSON: `{"ok":true}` on success, `{"error":"..."}` with an error status otherwise.
 
 What the panel shows for a call is the owner's choice on the Feedback page (Panel), one per
@@ -43,12 +47,12 @@ change is made and the answer is the same in every case.
 
 | Status | Meaning |
 | --- | --- |
-| 400 | A parameter is missing; an upload that is not a GIF, not 64×32 or 32×64, or not sent as `multipart/form-data` |
+| 400 | A parameter is missing; a negative `Content-Length`; an upload that is not a GIF, not 64×32 or 32×64, or not sent as `multipart/form-data` |
 | 401 | Token missing or wrong |
 | 403 | Request from another web site, or to a host name the panel does not have |
 | 404 | Unknown screen or image; a screen drawn only for the other orientation |
 | 409 | The screen is off in the owner's list |
-| 413 | Upload over 96 KB |
+| 413 | Upload over 96 KB; any other body over its cap (512 bytes, 1 KB for `/api/notify` and `/api/text`) |
 | 500 | The panel could not do it: a flash or settings write refused, or out of memory |
 | 503 | No storage area for images (a panel on an older partition table), or the panel is locked by an unfinished factory reset |
 | 507 | No room left for the image, or 24 images already stored |

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The browser routes Stage and the Wi-Fi page post to (/show, /brightness,
-// /text, /wifi): who may post, how much is read, and what a value may be.
+// /text, /wifi): who may post, how much is read, and what a value may be;
+// and how much the library may read of every other POST.
 // Hardware-free, so test/test_web_forms checks every branch on the PC;
 // web.cpp reads the request and sends the answers.
 #pragma once
@@ -26,6 +27,22 @@ struct FormInput { bool hostOk, crossSite, cookieOk, locked; int32_t announced; 
 // the size (a negative one: 400; over FORM_BODY_MAX: 413), then the lock
 // (the locked page). Accepted: 0 <= announced <= FORM_BODY_MAX.
 FormVerdict formGate(const FormInput &in);
+
+// Every other POST (the API, sign-in, the settings form, the buttons, an
+// unknown address): the library reads the body itself, whole into RAM,
+// before any check, so a body over its route's cap is refused unread, after
+// the route's own checks of the visitor (host, site, token or session).
+// Each cap is the largest body the route takes, every byte encoded, with
+// margin (test_web_forms builds them). A multipart body is out of reach:
+// the library parses it before any handler can look at its size.
+static const size_t BODY_CAP_SMALL = 512;      // one name or number: the API's calls, sign-in, the buttons
+static const size_t BODY_CAP_MESSAGE = 1024;   // /api/notify, /api/text: 159 bytes of text, each \uXXXX
+static const size_t BODY_CAP_SETTINGS = 2048;  // /sauver: the Panel form, filled to every bound, is 1.3 KB
+// BODY_READ: 0 <= announced <= cap, read by the library as before
+enum BodyVerdict : uint8_t { BODY_READ, BODY_BAD_LENGTH, BODY_TOO_LARGE };
+BodyVerdict bodyVerdict(int32_t announced, size_t cap);
+// A route's cap, BODY_CAP_SMALL for any address without one of its own
+size_t bodyCap(const char *uri);
 
 // Zeroes n bytes that held a secret (a password, a key) before the memory is
 // freed or goes out of scope. memset there is a dead store GCC may drop: the

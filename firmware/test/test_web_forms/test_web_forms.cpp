@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The browser routes' gate, body and values: who may post to /show,
 // /brightness, /text and /wifi, how much is read, and what each value may
-// be. The body parser reads what any device on the network sends: it is
-// also run on seeded random and mutated bodies, under AddressSanitizer.
+// be; and how much the library may read of every other POST. The body
+// parser reads what any device on the network sends: it is also run on
+// seeded random and mutated bodies, under AddressSanitizer.
 //
 //   pio test -e native -f test_web_forms
 #include <unity.h>
@@ -20,6 +21,7 @@
 #include "../../src/posters.cpp"
 #include "../../src/web_stage.cpp"
 #include "../../src/web_forms.cpp"
+#include "../../src/content_logic.h"
 
 void setUp() {}
 void tearDown() {}
@@ -107,6 +109,66 @@ static void test_gate_locked_after_size() {
   TEST_ASSERT_EQUAL(FORM_LOCKED, formGate(in));
   in.cookieOk = false;
   TEST_ASSERT_EQUAL(FORM_SIGN_IN, formGate(in));
+}
+
+// --- The other POST routes: the library reads the body, up to a cap -------
+
+static void test_post_body_verdict() {
+  TEST_ASSERT_EQUAL(BODY_READ, bodyVerdict(0, 256));
+  TEST_ASSERT_EQUAL(BODY_READ, bodyVerdict(256, 256));
+  TEST_ASSERT_EQUAL(BODY_TOO_LARGE, bodyVerdict(257, 256));
+  TEST_ASSERT_EQUAL(BODY_TOO_LARGE, bodyVerdict(INT32_MAX, BODY_CAP_SETTINGS));
+  // A negative Content-Length would have the library read without end
+  TEST_ASSERT_EQUAL(BODY_BAD_LENGTH, bodyVerdict(-1, 256));
+  TEST_ASSERT_EQUAL(BODY_BAD_LENGTH, bodyVerdict(INT32_MIN, 256));
+}
+
+static void test_post_caps_per_route() {
+  TEST_ASSERT_EQUAL(2048, BODY_CAP_SETTINGS);
+  TEST_ASSERT_EQUAL(1024, BODY_CAP_MESSAGE);
+  TEST_ASSERT_EQUAL(512, BODY_CAP_SMALL);
+  TEST_ASSERT_EQUAL(BODY_CAP_SETTINGS, bodyCap("/sauver"));
+  TEST_ASSERT_EQUAL(BODY_CAP_MESSAGE, bodyCap("/api/notify"));
+  TEST_ASSERT_EQUAL(BODY_CAP_MESSAGE, bodyCap("/api/text"));
+  static const char *const SMALL[] = {"/login", "/api/screen", "/api/brightness",
+                                      "/api/images/delete", "/api/images/show", "/images/delete",
+                                      "/images/show", "/update", "/signout", "/hooks", "/purge",
+                                      "/", "/nowhere", ""};
+  for (const char *uri : SMALL) TEST_ASSERT_EQUAL_MESSAGE(BODY_CAP_SMALL, bodyCap(uri), uri);
+  TEST_ASSERT_EQUAL(BODY_CAP_SMALL, bodyCap(nullptr));
+}
+
+// Each cap holds the largest body its route takes, in the most expensive
+// encoding a client may pick: every byte %XX in a form, \uXXXX in JSON
+static std::string repeat(const char *part, size_t times) {
+  std::string s;
+  while (times--) s += part;
+  return s;
+}
+
+static void test_post_caps_hold_largest_bodies() {
+  // /api/notify and /api/text keep 159 bytes of text (web.cpp's text[160])
+  const std::string notifyForm = "text=" + repeat("%E2", 159) + "&color=%23ffffff&seconds=600";
+  const std::string notifyJson = "{ \"text\": \"" + repeat("\\u00e9", 80) +
+                                 "\", \"color\": \"#ffffff\", \"seconds\": 600 }";
+  const std::string emojiJson = "{\"text\":\"" + repeat("\\ud83d\\ude00", 40) + "\"}";
+  for (const std::string *b : {&notifyForm, &notifyJson, &emojiJson}) {
+    TEST_ASSERT_TRUE_MESSAGE(b->size() <= bodyCap("/api/notify"), b->c_str());
+    TEST_ASSERT_TRUE_MESSAGE(b->size() <= bodyCap("/api/text"), b->c_str());
+  }
+  // An image name, one byte past the longest stored
+  const std::string image = "{ \"name\": \"" + repeat("\\u00e9", IMAGE_NAME_MAX + 1) + "\" }";
+  TEST_ASSERT_TRUE(image.size() <= bodyCap("/api/images/delete"));
+  TEST_ASSERT_TRUE(image.size() <= bodyCap("/api/images/show"));
+  TEST_ASSERT_TRUE(("n=" + repeat("%41", IMAGE_NAME_MAX + 1)).size() <= bodyCap("/images/delete"));
+  TEST_ASSERT_TRUE(("sh=" + repeat("%41", IMAGE_NAME_MAX + 1)).size() <= bodyCap("/images/show"));
+  // A screen name (web.cpp's name[24]) and a level
+  const std::string screen = "{ \"screen\": \"" + repeat("\\u0041", 23) + "\" }";
+  TEST_ASSERT_TRUE(screen.size() <= bodyCap("/api/screen"));
+  TEST_ASSERT_TRUE(std::string("{ \"level\": 255 }").size() <= bodyCap("/api/brightness"));
+  // Sign-in: six digits and the longest return path, a screen's page
+  const std::string login = "code=123456&next=%2Fscreens%2F" + repeat("%61", 24);
+  TEST_ASSERT_TRUE(login.size() <= bodyCap("/login"));
 }
 
 // --- The body --------------------------------------------------------------
@@ -347,6 +409,9 @@ int main(int, char **) {
   RUN_TEST(test_gate_too_large);
   RUN_TEST(test_gate_negative_length);
   RUN_TEST(test_gate_locked_after_size);
+  RUN_TEST(test_post_body_verdict);
+  RUN_TEST(test_post_caps_per_route);
+  RUN_TEST(test_post_caps_hold_largest_bodies);
   RUN_TEST(test_body_cap);
   RUN_TEST(test_body_decodes);
   RUN_TEST(test_body_first_value_wins);
