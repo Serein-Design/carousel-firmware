@@ -25,7 +25,9 @@
 //   - c.css.gz, p.png: the stylesheet's and the poster sheet's bytes as the
 //     firmware serves them, at /s/<version>/c.css and /s/<version>/p.png;
 //   - preview.bmp, info.json: a frame through the preview's encoder and
-//     /api/info's screens for the same state, at /preview and /api/info.
+//     /api/info's screens for the same state, at /preview and /api/info;
+//   - caps.json: the body cap of each route these pages post to (web_forms.h),
+//     which every form must fit.
 //
 //   pio test -e native -f test_web_pages
 //   node tools/webcheck/webcheck.mjs
@@ -55,6 +57,7 @@
 #include "../../src/web_panel.cpp"
 #include "../../src/preview_logic.cpp"
 #include "../../src/web_assets.cpp"
+#include "../../src/web_forms.cpp"
 #include "../test_gif/fixtures.h"
 
 // settings.cpp's lock, read by content_logic's choice
@@ -527,6 +530,24 @@ static void test_write_panel_pages() {
 
 // Feedback's page in each language: as loaded, one request kind off, a
 // failed write (the posted choices shown), saved
+// Every route the pages post to but the upload (/images): those the library
+// reads (web.cpp's CappedRoute), then FormRoutes' four, held to FORM_BODY_MAX
+static void test_write_body_caps() {
+  static const char *const ROUTES[] = {"/sauver", "/login", "/images/delete", "/images/show",
+                                       "/update", "/purge", "/signout", "/hooks"};
+  std::string j = "{";
+  for (const char *r : ROUTES) {
+    if (j.size() > 1) j += ',';
+    j += std::string("\"") + r + "\":" + std::to_string(bodyCap(r));
+  }
+  for (const char *r : {"/show", "/brightness", "/text", "/wifi"})
+    j += std::string(",\"") + r + "\":" + std::to_string(FORM_BODY_MAX);
+  j += '}';
+  at(j, "\"/sauver\":2048");
+  at(j, "\"/text\":1024");
+  write("caps.json", j);
+}
+
 static void test_write_feedback_pages() {
   Settings stored;
   Settings posted = stored;
@@ -572,5 +593,6 @@ int main(int, char **) {
   RUN_TEST(test_write_images_pages);
   RUN_TEST(test_write_panel_pages);
   RUN_TEST(test_write_feedback_pages);
+  RUN_TEST(test_write_body_caps);
   return UNITY_END();
 }

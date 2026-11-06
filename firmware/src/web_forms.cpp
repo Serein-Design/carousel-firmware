@@ -14,6 +14,20 @@ FormVerdict formGate(const FormInput &in) {
   return FORM_ACCEPT;
 }
 
+BodyVerdict bodyVerdict(int32_t announced, size_t cap) {
+  if (announced < 0) return BODY_BAD_LENGTH;
+  return (size_t)announced > cap ? BODY_TOO_LARGE : BODY_READ;
+}
+
+size_t bodyCap(const char *uri) {
+  static const struct { const char *uri; size_t cap; } CAPS[] = {
+    {"/sauver", BODY_CAP_SETTINGS}, {"/api/notify", BODY_CAP_MESSAGE}, {"/api/text", BODY_CAP_MESSAGE},
+  };
+  for (const auto &c : CAPS)
+    if (uri && strcmp(uri, c.uri) == 0) return c.cap;
+  return BODY_CAP_SMALL;
+}
+
 void wipeSecret(void *p, size_t n) {
   volatile unsigned char *b = (volatile unsigned char *)p;
   while (n--) *b++ = 0;

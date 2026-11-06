@@ -22,6 +22,11 @@
 //               above the window's bottom edge (it must sit at the edge,
 //               not rise and leave a gap under it);
 //   - focus:    a focus stop, reached with Tab, without a 2 px ring;
+//   - body:     a form whose largest body, every field filled to its bound
+//               with U+2019, the widest character the panel's font takes
+//               (3 bytes, 9 once encoded; a number field: 12 digits), is
+//               over its route's cap in caps.json (web_forms.h): the panel
+//               would refuse it with 413;
 //   - motion:   an animation or transition running under reduced motion;
 //   - no-js:    overflow, targets and structure again with scripts off;
 //   - fold:     Stage pages: the preview, as the fixture really is (32 x 64
@@ -284,6 +289,36 @@ async function typedInBlocks(page) {
     }
   }
   return out;
+}
+
+// Runs in the page, last: every field of each form posting to a capped
+// route is filled to its bound, each box ticked, each list on its longest
+// value, and the urlencoded body measured with the longest named button
+// that submits it. Fields without maxlength take 12 characters.
+function largestBodies(caps) {
+  const out = [];
+  let counted = 0;
+  for (const form of document.forms) {
+    const action = form.getAttribute('action');
+    if (!(action in caps)) continue;
+    for (const el of form.elements) {
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = [...el.options].reduce((b, o, i, all) => (o.value.length > all[b].value.length ? i : b), 0);
+      } else if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = true;
+      } else if (['text', 'password', 'search', 'number', 'textarea'].includes(el.type)) {
+        el.value = (el.type === 'number' ? '9' : '\u2019').repeat(el.maxLength > 0 ? el.maxLength : 12);
+      }
+    }
+    const fields = new URLSearchParams(new FormData(form)).toString().length;
+    const button = Math.max(0, ...[...form.elements].filter((b) => b.type === 'submit' && b.name)
+      .map((b) => new URLSearchParams({ [b.name]: b.value }).toString().length + 1));
+    counted++;
+    if (fields + button > caps[action]) {
+      out.push({ what: `${action}: ${fields + button} bytes, cap ${caps[action]}`, known: [] });
+    }
+  }
+  return { counted, problems: out };
 }
 
 const PASSWORD_PASS = 'the password field under each row that asks for one, hidden otherwise';
@@ -1349,6 +1384,7 @@ if (!files.length) {
 }
 
 const { chromium, webkit, axeSource } = await loadTools();
+const CAPS = JSON.parse(readFileSync(join(dir, 'caps.json'), 'utf8'));
 const server = await serve(dir, files);
 const origin = `http://127.0.0.1:${server.address().port}`;
 const used = new Set();
@@ -1445,6 +1481,11 @@ try {
         const typed = await typedInBlocks(page);
         out.push({ check: 'folded', where, problems: [...folded.problems, ...typed],
                    passText: `${folded.count} fields in blocks post whatever is typed` });
+        if (width === WIDTHS[0]) {
+          const b = await page.evaluate(largestBodies, CAPS);
+          out.push({ check: 'body', where, problems: b.problems,
+                     passText: `${b.counted} forms within their route's cap` });
+        }
         await page.close();
 
         // Scripts off: every action is a link or a form, so the page must

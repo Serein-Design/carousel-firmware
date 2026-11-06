@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // The browser routes' gate, body and values: who may post to /show,
 // /brightness, /text and /wifi, how much is read, and what each value may
-// be. The body parser reads what any device on the network sends: it is
-// also run on seeded random and mutated bodies, under AddressSanitizer.
+// be; and how much the library may read of every other POST. The body
+// parser reads what any device on the network sends: it is also run on
+// seeded random and mutated bodies, under AddressSanitizer.
 //
 //   pio test -e native -f test_web_forms
 #include <unity.h>
@@ -20,6 +21,7 @@
 #include "../../src/posters.cpp"
 #include "../../src/web_stage.cpp"
 #include "../../src/web_forms.cpp"
+#include "../../src/content_logic.h"
 
 void setUp() {}
 void tearDown() {}
@@ -40,7 +42,7 @@ static std::string value(const FormBody &f, const char *name, size_t size = 600)
 // --- The gate --------------------------------------------------------------
 
 static void test_gate_order() {
-  static const int32_t SIZES[] = {512, 513, -1};
+  static const int32_t SIZES[] = {(int32_t)FORM_BODY_MAX, (int32_t)FORM_BODY_MAX + 1, -1};
   for (int bits = 0; bits < 16; bits++) {
     for (const int32_t size : SIZES) {
       FormInput in;
@@ -52,7 +54,7 @@ static void test_gate_order() {
       const FormVerdict want = !in.hostOk || in.crossSite ? FORM_FORBIDDEN
                              : !in.cookieOk               ? FORM_SIGN_IN
                              : in.announced < 0           ? FORM_BAD_LENGTH
-                             : in.announced > 512         ? FORM_TOO_LARGE
+                             : in.announced > (int32_t)FORM_BODY_MAX ? FORM_TOO_LARGE
                              : in.locked                  ? FORM_LOCKED
                                                           : FORM_ACCEPT;
       char msg[32];
@@ -70,9 +72,9 @@ static void test_bearer_is_not_a_session() {
 }
 
 static void test_gate_too_large() {
-  FormInput in = {true, false, true, false, 512};
+  FormInput in = {true, false, true, false, (int32_t)FORM_BODY_MAX};
   TEST_ASSERT_EQUAL(FORM_ACCEPT, formGate(in));
-  in.announced = 513;
+  in.announced = FORM_BODY_MAX + 1;
   TEST_ASSERT_EQUAL(FORM_TOO_LARGE, formGate(in));
   in.announced = INT32_MAX;
   TEST_ASSERT_EQUAL(FORM_TOO_LARGE, formGate(in));
@@ -101,7 +103,7 @@ static void test_gate_negative_length() {
 // Locked: the owner still learns the body was too large; a body that fits
 // gets the locked page
 static void test_gate_locked_after_size() {
-  FormInput in = {true, false, true, true, 513};
+  FormInput in = {true, false, true, true, (int32_t)FORM_BODY_MAX + 1};
   TEST_ASSERT_EQUAL(FORM_TOO_LARGE, formGate(in));
   in.announced = 20;
   TEST_ASSERT_EQUAL(FORM_LOCKED, formGate(in));
@@ -109,14 +111,114 @@ static void test_gate_locked_after_size() {
   TEST_ASSERT_EQUAL(FORM_SIGN_IN, formGate(in));
 }
 
+// --- The other POST routes: the library reads the body, up to a cap -------
+
+static void test_post_body_verdict() {
+  TEST_ASSERT_EQUAL(BODY_READ, bodyVerdict(0, 256));
+  TEST_ASSERT_EQUAL(BODY_READ, bodyVerdict(256, 256));
+  TEST_ASSERT_EQUAL(BODY_TOO_LARGE, bodyVerdict(257, 256));
+  TEST_ASSERT_EQUAL(BODY_TOO_LARGE, bodyVerdict(INT32_MAX, BODY_CAP_SETTINGS));
+  // A negative Content-Length would have the library read without end
+  TEST_ASSERT_EQUAL(BODY_BAD_LENGTH, bodyVerdict(-1, 256));
+  TEST_ASSERT_EQUAL(BODY_BAD_LENGTH, bodyVerdict(INT32_MIN, 256));
+}
+
+static void test_post_caps_per_route() {
+  TEST_ASSERT_EQUAL(2048, BODY_CAP_SETTINGS);
+  TEST_ASSERT_EQUAL(1024, BODY_CAP_MESSAGE);
+  TEST_ASSERT_EQUAL(512, BODY_CAP_SMALL);
+  TEST_ASSERT_EQUAL(BODY_CAP_SETTINGS, bodyCap("/sauver"));
+  TEST_ASSERT_EQUAL(BODY_CAP_MESSAGE, bodyCap("/api/notify"));
+  TEST_ASSERT_EQUAL(BODY_CAP_MESSAGE, bodyCap("/api/text"));
+  static const char *const SMALL[] = {"/login", "/api/screen", "/api/brightness",
+                                      "/api/images/delete", "/api/images/show", "/images/delete",
+                                      "/images/show", "/update", "/signout", "/hooks", "/purge",
+                                      "/", "/nowhere", ""};
+  for (const char *uri : SMALL) TEST_ASSERT_EQUAL_MESSAGE(BODY_CAP_SMALL, bodyCap(uri), uri);
+  TEST_ASSERT_EQUAL(BODY_CAP_SMALL, bodyCap(nullptr));
+}
+
+// Each cap holds the largest body its route takes, in the most expensive
+// encoding a client may pick: every byte %XX in a form, \uXXXX in JSON
+static std::string repeat(const char *part, size_t times) {
+  std::string s;
+  while (times--) s += part;
+  return s;
+}
+
+static void test_post_caps_hold_largest_bodies() {
+  // /api/notify and /api/text keep 159 bytes of text (web.cpp's text[160])
+  const std::string notifyForm = "text=" + repeat("%E2", 159) + "&color=%23ffffff&seconds=600";
+  const std::string notifyJson = "{ \"text\": \"" + repeat("\\u00e9", 80) +
+                                 "\", \"color\": \"#ffffff\", \"seconds\": 600 }";
+  const std::string emojiJson = "{\"text\":\"" + repeat("\\ud83d\\ude00", 40) + "\"}";
+  for (const std::string *b : {&notifyForm, &notifyJson, &emojiJson}) {
+    TEST_ASSERT_TRUE_MESSAGE(b->size() <= bodyCap("/api/notify"), b->c_str());
+    TEST_ASSERT_TRUE_MESSAGE(b->size() <= bodyCap("/api/text"), b->c_str());
+  }
+  // An image name, one byte past the longest stored
+  const std::string image = "{ \"name\": \"" + repeat("\\u00e9", IMAGE_NAME_MAX + 1) + "\" }";
+  TEST_ASSERT_TRUE(image.size() <= bodyCap("/api/images/delete"));
+  TEST_ASSERT_TRUE(image.size() <= bodyCap("/api/images/show"));
+  TEST_ASSERT_TRUE(("n=" + repeat("%41", IMAGE_NAME_MAX + 1)).size() <= bodyCap("/images/delete"));
+  TEST_ASSERT_TRUE(("sh=" + repeat("%41", IMAGE_NAME_MAX + 1)).size() <= bodyCap("/images/show"));
+  // A screen name (web.cpp's name[24]) and a level
+  const std::string screen = "{ \"screen\": \"" + repeat("\\u0041", 23) + "\" }";
+  TEST_ASSERT_TRUE(screen.size() <= bodyCap("/api/screen"));
+  TEST_ASSERT_TRUE(std::string("{ \"level\": 255 }").size() <= bodyCap("/api/brightness"));
+  // Sign-in: six digits and the longest return path, a screen's page
+  const std::string login = "code=123456&next=%2Fscreens%2F" + repeat("%61", 24);
+  TEST_ASSERT_TRUE(login.size() <= bodyCap("/login"));
+}
+
+// --- The longest message ---------------------------------------------------
+
+// Send (/text): 95 characters, the field's maxlength, form-encoded. A
+// character the font takes is at most 3 bytes of UTF-8 (U+2019, U+2026...),
+// 9 once each byte is %XX: 859 bytes, the most this form can post.
+static void test_longest_message_accepted() {
+  for (const char *c : {"%C3%A9", "%E2%80%99", "%E2%80%A6"}) {   // é ’ …
+    const std::string b = "msg=" + repeat(c, MESSAGE_CHARS);
+    const FormInput in = {true, false, true, false, (int32_t)b.size()};
+    TEST_ASSERT_EQUAL_MESSAGE(FORM_ACCEPT, formGate(in), c);
+    FormBody f;
+    TEST_ASSERT_TRUE_MESSAGE(f.set(b.data(), b.size()), c);
+    char typed[FORM_BODY_MAX + 1];
+    const int n = f.value("msg", typed, sizeof(typed));
+    TEST_ASSERT_EQUAL_MESSAGE(MESSAGE_CHARS * (strlen(c) / 3), n, c);
+  }
+  TEST_ASSERT_TRUE(MESSAGE_TYPED_MAX >= MESSAGE_CHARS * 3);
+}
+
+static void test_message_just_over_the_cap() {
+  const std::string b = "msg=" + repeat("%E2%80%99", MESSAGE_CHARS) +
+                        std::string(FORM_BODY_MAX - 4 - MESSAGE_CHARS * 9 + 1, 'a');
+  TEST_ASSERT_EQUAL(FORM_BODY_MAX + 1, b.size());
+  const FormInput in = {true, false, true, false, (int32_t)b.size()};
+  TEST_ASSERT_EQUAL(FORM_TOO_LARGE, formGate(in));   // web.cpp: 413
+  FormBody f;
+  TEST_ASSERT_FALSE(f.set(b.data(), b.size()));
+}
+
+// /api/text: the same 95 characters, as a form (each byte %XX) or as JSON
+// (each \uXXXX), fit its cap; one byte over is refused with 413
+static void test_api_text_longest_message() {
+  const std::string form = "text=" + repeat("%E2%80%99", MESSAGE_CHARS);
+  const std::string json = "{ \"text\": \"" + repeat("\\u2019", MESSAGE_CHARS) + "\" }";
+  for (const std::string *b : {&form, &json})
+    TEST_ASSERT_EQUAL_MESSAGE(BODY_READ, bodyVerdict((int32_t)b->size(), bodyCap("/api/text")),
+                              b->c_str());
+  TEST_ASSERT_EQUAL(BODY_TOO_LARGE, bodyVerdict((int32_t)bodyCap("/api/text") + 1, bodyCap("/api/text")));
+}
+
 // --- The body --------------------------------------------------------------
 
 static void test_body_cap() {
-  std::string b = "msg=" + std::string(508, 'a');   // 512
+  std::string b = "msg=" + std::string(FORM_BODY_MAX - 4, 'a');   // FORM_BODY_MAX
   FormBody f;
   TEST_ASSERT_TRUE(f.set(b.data(), b.size()));
-  TEST_ASSERT_EQUAL(508, f.value("msg", nullptr, 0));
-  b += 'a';                                         // 513
+  TEST_ASSERT_EQUAL(FORM_BODY_MAX - 4, f.value("msg", nullptr, 0));
+  b += 'a';                                                        // one over
   TEST_ASSERT_FALSE(f.set(b.data(), b.size()));
   TEST_ASSERT_FALSE(f.has("msg"));                  // refused: empty, not the last body
   TEST_ASSERT_TRUE(f.set("", 0));
@@ -347,6 +449,12 @@ int main(int, char **) {
   RUN_TEST(test_gate_too_large);
   RUN_TEST(test_gate_negative_length);
   RUN_TEST(test_gate_locked_after_size);
+  RUN_TEST(test_post_body_verdict);
+  RUN_TEST(test_post_caps_per_route);
+  RUN_TEST(test_post_caps_hold_largest_bodies);
+  RUN_TEST(test_longest_message_accepted);
+  RUN_TEST(test_message_just_over_the_cap);
+  RUN_TEST(test_api_text_longest_message);
   RUN_TEST(test_body_cap);
   RUN_TEST(test_body_decodes);
   RUN_TEST(test_body_first_value_wins);
