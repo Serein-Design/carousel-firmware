@@ -14,6 +14,9 @@ All notable changes to this project. The format follows
   nghttp2, the Arduino libraries, the GCC runtime and the ROM's tinfl.
 
 ### Changed
+- CI runs the browser checks of the settings pages (`tools/webcheck`, Chromium and WebKit) in
+  a `webcheck` job, and the host tests run under UndefinedBehaviorSanitizer next to
+  AddressSanitizer; neither changes the firmware.
 - Simulator: three examples take generic names, ALIENS, FLAP and PET, instead of those of
   other companies' games and toys; the drawings are unchanged. A browser that saved the
   gallery before keeps its old copies next to the new ones, and the pet starts afresh under

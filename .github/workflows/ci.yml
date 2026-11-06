@@ -63,3 +63,34 @@ jobs:
       # sh is dash on Ubuntu: a bashism fails here
       - run: sh tools/agent-bridge/test/test_hook.sh
       - run: sh tools/agent-bridge/test/test_install.sh
+
+  # The settings pages in real browsers: overflow, tap targets, contrast, axe,
+  # keyboard and no-script behaviour. It reads the HTML files that the host test
+  # test_web_pages writes, so that one test runs first.
+  webcheck:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install platformio==6.1.19
+      - run: pio test -d firmware -e native -f test_web_pages
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --prefix tools/webcheck --no-audit --no-fund
+      # The browsers weigh several hundred MB; the key follows the pinned
+      # Playwright version. System libraries are not cached: apt installs them.
+      - id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('tools/webcheck/package-lock.json') }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx --prefix tools/webcheck playwright install --with-deps chromium webkit
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx --prefix tools/webcheck playwright install-deps chromium webkit
+      - run: node tools/webcheck/webcheck.mjs
