@@ -19,7 +19,8 @@ All notable changes to this project. The format follows
   gallery before keeps its old copies next to the new ones, and the pet starts afresh under
   its new storage key.
 - Firmware: a TLS error reads as its code (`-0x2700`) instead of mbedTLS's message, in a
-  build with the framework's logs turned on: 15 KB more room for updates.
+  build with the framework's logs turned on, and an ESP-IDF error on the serial port reads as
+  its code (`0x0101`) instead of its name (`ESP_ERR_NO_MEM`): 22 KB more room for updates.
 
 ## [0.2.0] - 2026-10-26
 
