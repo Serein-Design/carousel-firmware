@@ -957,7 +957,7 @@ static void apiNotify() {
 
 static void apiText() {
   if (!apiAllowed()) return;
-  char text[160];
+  char text[MESSAGE_TYPED_MAX + 1];   // the page's 95 characters, even typographic ones
   if (!apiArg("text", text, sizeof(text))) { apiError(400, "text missing"); return; }
   if (panelLocked()) { apiError(503, "panel locked: factory reset unfinished"); return; }
   toMessageText(text, settings.message, sizeof(settings.message));

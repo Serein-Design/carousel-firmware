@@ -9,10 +9,15 @@
 #include <Arduino.h>
 #include <string.h>
 
-// The largest form these pages send is the Wi-Fi one, about 200 bytes
-// encoded; the cap leaves room for a 95-character message typed with
-// accents. A body over it is refused unread.
-static const size_t FORM_BODY_MAX = 512;
+// The TEXT message as typed: 95 characters (the fields' maxlength), each at
+// most 3 bytes of UTF-8 among those the font takes (U+2019, U+2026...; a
+// character past U+FFFF is 4 bytes but counts as 2 in maxlength)
+static const size_t MESSAGE_CHARS = 95, MESSAGE_TYPED_MAX = MESSAGE_CHARS * 3;   // 285 bytes
+
+// The largest form these pages send is Send's: "msg=" and the message, each
+// byte %XX, 4 + 285 * 3 = 859 bytes (the Wi-Fi form, every field at its
+// bound, is about 900 counted the same way). A body over it is refused unread.
+static const size_t FORM_BODY_MAX = 1024;
 
 enum FormVerdict : uint8_t { FORM_ACCEPT, FORM_FORBIDDEN, FORM_SIGN_IN, FORM_BAD_LENGTH,
                              FORM_TOO_LARGE, FORM_LOCKED };
@@ -36,7 +41,8 @@ FormVerdict formGate(const FormInput &in);
 // margin (test_web_forms builds them). A multipart body is out of reach:
 // the library parses it before any handler can look at its size.
 static const size_t BODY_CAP_SMALL = 512;      // one name or number: the API's calls, sign-in, the buttons
-static const size_t BODY_CAP_MESSAGE = 1024;   // /api/notify, /api/text: 159 bytes of text, each \uXXXX
+// /api/notify: 159 bytes of text; /api/text: MESSAGE_TYPED_MAX, as a form 5 + 285 * 3 = 860
+static const size_t BODY_CAP_MESSAGE = 1024;
 static const size_t BODY_CAP_SETTINGS = 2048;  // /sauver: the Panel form, filled to every bound, is 1.3 KB
 // BODY_READ: 0 <= announced <= cap, read by the library as before
 enum BodyVerdict : uint8_t { BODY_READ, BODY_BAD_LENGTH, BODY_TOO_LARGE };

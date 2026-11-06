@@ -19,6 +19,12 @@ All notable changes to this project. The format follows
   gallery before keeps its old copies next to the new ones, and the pet starts afresh under
   its new storage key.
 
+### Fixed
+- Stage's Send refused a long message typed with accents or typographic punctuation (95
+  characters can encode to 859 bytes; the cap was 512): the Stage and Wi-Fi forms now take up
+  to 1 KB. `/api/text` kept only the first 159 bytes of a message; it now reads the 285 bytes
+  95 such characters take, as the page does.
+
 ### Security
 - Every POST body is capped before the web server library reads it into RAM: 1 KB for
   `/api/notify` and `/api/text`, 2 KB for the settings form, 512 bytes for the other API calls,

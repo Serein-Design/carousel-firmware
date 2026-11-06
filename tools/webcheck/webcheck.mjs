@@ -23,7 +23,8 @@
 //               not rise and leave a gap under it);
 //   - focus:    a focus stop, reached with Tab, without a 2 px ring;
 //   - body:     a form whose largest body, every field filled to its bound
-//               with an accented letter (a number field: 12 digits), is
+//               with U+2019, the widest character the panel's font takes
+//               (3 bytes, 9 once encoded; a number field: 12 digits), is
 //               over its route's cap in caps.json (web_forms.h): the panel
 //               would refuse it with 413;
 //   - motion:   an animation or transition running under reduced motion;
@@ -306,7 +307,7 @@ function largestBodies(caps) {
       } else if (el.type === 'checkbox' || el.type === 'radio') {
         el.checked = true;
       } else if (['text', 'password', 'search', 'number', 'textarea'].includes(el.type)) {
-        el.value = (el.type === 'number' ? '9' : '\u00e9').repeat(el.maxLength > 0 ? el.maxLength : 12);
+        el.value = (el.type === 'number' ? '9' : '\u2019').repeat(el.maxLength > 0 ? el.maxLength : 12);
       }
     }
     const fields = new URLSearchParams(new FormData(form)).toString().length;
