@@ -18,6 +18,8 @@ All notable changes to this project. The format follows
   other companies' games and toys; the drawings are unchanged. A browser that saved the
   gallery before keeps its old copies next to the new ones, and the pet starts afresh under
   its new storage key.
+- Firmware: a TLS error reads as its code (`-0x2700`) instead of mbedTLS's message, in a
+  build with the framework's logs turned on: 15 KB more room for updates.
 
 ## [0.2.0] - 2026-10-26
 
