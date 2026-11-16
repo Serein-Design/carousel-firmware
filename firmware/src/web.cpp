@@ -15,6 +15,7 @@
 #include "agent_scripts.h"
 #include "auth.h"
 #include "agent_bridge.h"
+#include "client_logic.h"
 #include "content.h"
 #include "display.h"
 #include "gallery.h"
@@ -53,6 +54,9 @@
 //  - TCP_NODELAY: without it, a response's header and body leave in two
 //    packets, and the second waits for Windows' delayed ACK, up to 200 ms per
 //    response.
+//  - a shorter wait for a client that sends nothing while another queues: a
+//    browser's preconnected socket held the one client slot for 5 s, and a
+//    hook behind it gave up at 4 s (client_logic.h).
 class PanelServer : public WebServer {
 public:
   explicit PanelServer(int port) : WebServer(port) {
@@ -66,6 +70,17 @@ public:
   }
   // After begin(), which resets it to false
   void disableNagle() { _server.setNoDelay(true); }
+  // An idle client dropped for the next one; the base then sees it closed
+  // and moves on. The status test first: hasClient() accepts the waiting
+  // connection, which the base's available() then takes.
+  void handleClient() override {
+    if (_currentStatus == HC_WAIT_READ &&
+        dropIdleClient(true, _currentClient.available() > 0, millis() - _statusChange,
+                       _server.hasClient())) {
+      _currentClient.stop();
+    }
+    WebServer::handleClient();
+  }
 };
 static PanelServer server(80);
 
